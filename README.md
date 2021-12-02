@@ -8,6 +8,14 @@ which are typically used in [Remix](https://remix.run) apps.
 
 This package is still work in progress. I'll be refining the API and fixing the TypeScript types.
 
+## 🛠 Installation
+
+```sh
+npm install remix-params-helper zod
+```
+
+Zod is a peer dependency
+
 ## 📦 Zod
 
 Zod is used to validate untyped data and either return a valid object or a list of errors encounted.
@@ -25,13 +33,13 @@ const ParamsSchema = z.object({
 type ParamsType = z.infer<typeof ParamsSchema>
 ```
 
-## 📝 API
+## 📝 API Reference
 
 ### `getParams<T>(params, schema)`
 
 This function is used to parse and validate data from `URLSearchParams`, `FormData`, or Remix `params` object.
 
-It returns an object that has `success` property. If `success` is `true` then `result.data` will be a valid object of type `T`.
+It returns an object that has `success` property. If `result.success` is `true` then `result.data` will be a valid object of type `T`.
 
 Otherwise, `result.errors` will be an object with keys for each property that failed validation. The key value will be the validation error message.
 
@@ -49,7 +57,7 @@ Unlike `Object.fromEntries()`, this function also supports multi-value keys and 
 
 ### `useFormInputProps(schema)`
 
-This helper allows you to set the props on your form `<input>` based on your Zod schema.
+This helper allows you to set the props on your form `<input/>` based on your Zod schema.
 
 The function returns another function that you use to spread the properties on your input. It currently sets the `name`, `type`, and `required` props based on the key value you specify. If you need to override any of the props, just add it after you spread.
 
