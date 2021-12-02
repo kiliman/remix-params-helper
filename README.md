@@ -46,13 +46,13 @@ Otherwise, `result.errors` will be an object with keys for each property that fa
 Unlike `Object.fromEntries()`, this function also supports multi-value keys and will convert them to an array. So `e=1&e=2&e=3` will convert it to `e: [1,2,3]`
 
 ```ts
-  const url = new URL(request.url)
-  const result = getParams<ParamsType>(url.searchParams, ParamsSchema)
-  if (!result.success) {
-    throw new Response(result.errors), { status: 400 })
-  }
-  // these variable will be typed and valid
-  const { a, b, c, d, e } = result.data
+const url = new URL(request.url)
+const result = getParams<ParamsType>(url.searchParams, ParamsSchema)
+if (!result.success) {
+  throw new Response(result.errors, { status: 400 })
+}
+// these variable will be typed and valid
+const { a, b, c, d, e } = result.data
 ```
 
 ### `useFormInputProps(schema)`
