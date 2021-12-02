@@ -1,7 +1,7 @@
 import { useCatch, Link, json, useLoaderData } from 'remix'
 import type { LoaderFunction, MetaFunction } from 'remix'
 import { z } from 'zod'
-import { getParams } from '~/../../src/helper'
+import { getParams } from '~/utils/helper'
 
 const ParamsSchema = z.object({
   id: z.number(),

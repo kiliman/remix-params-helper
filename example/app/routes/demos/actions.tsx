@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import type { ActionFunction } from 'remix'
 import { Form, json, useActionData, redirect } from 'remix'
 import { z } from 'zod'
-import { getParams, useFormInputProps } from '~/../../src/helper'
+import { getParams, useFormInputProps } from '~/utils/helper'
 
 export function meta() {
   return { title: 'Actions Demo' }
