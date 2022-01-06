@@ -11,7 +11,9 @@
     "build:cjs": "tsc --project tsconfig.json --module CommonJS --outDir ./dist/cjs",
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "lint": "eslint --ext .ts,.tsx src/",
-    "test": "jest"
+    "test": "jest",
+    "contributors:add": "all-contributors add",
+    "contributors:generate": "all-contributors generate"
   },
   "author": "Michael J. Carter <kiliman@gmail.com> (https://kiliman.dev/)",
   "repository": {
@@ -39,6 +41,7 @@
     "@babel/preset-env": "^7.16.4",
     "@babel/preset-typescript": "^7.16.0",
     "@types/jest": "^27.0.3",
+    "all-contributors-cli": "^6.20.0",
     "babel-jest": "^27.4.2",
     "formdata-polyfill": "^4.0.10",
     "jest": "^27.4.3",
