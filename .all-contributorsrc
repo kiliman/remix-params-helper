@@ -18,6 +18,15 @@
         "code",
         "doc"
       ]
+    },
+    {
+      "login": "kettui",
+      "name": "Antti",
+      "avatar_url": "https://avatars.githubusercontent.com/u/12547765?v=4",
+      "profile": "https://github.com/kettui",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
