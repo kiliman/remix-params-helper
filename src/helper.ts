@@ -107,6 +107,8 @@ function processDef(def: ZodTypeAny, o: any, key: string, value: string) {
     parsedValue = Boolean(value)
   } else if (def instanceof ZodOptional) {
     processDef(def.unwrap(), o, key, value)
+    // return here to prevent overwriting the result of the recursive call
+    return
   } else if (def instanceof ZodArray) {
     if (o[key] === undefined) {
       o[key] = []
