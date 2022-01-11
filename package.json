@@ -1,6 +1,6 @@
 {
   "name": "remix-params-helper",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "",
   "browser": "/dist/helper.js",
   "main": "./dist/cjs/helper.js",
