@@ -9,6 +9,7 @@ const mySchema = z.object({
   e: z.number(),
   f: z.string().optional(),
   g: z.string().default('z'),
+  h: z.string().default('z'),
 })
 type MyParams = z.infer<typeof mySchema>
 
@@ -22,11 +23,20 @@ describe('test getParams', () => {
     params.set('e', '10')
     params.set('f', 'y')
     params.set('g', '') // empty params should use the default value when provided one
+    params.set('h', 'something')
 
     const { success, data } = getParams<MyParams>(params, mySchema)
 
     expect(success).toBe(true)
-    expect(data).toEqual({ a: 'x', b: [1, 2], c: true, e: 10, f: 'y', g: 'z' })
+    expect(data).toEqual({
+      a: 'x',
+      b: [1, 2],
+      c: true,
+      e: 10,
+      f: 'y',
+      g: 'z',
+      h: 'something',
+    })
   })
 
   it('should return error', () => {
