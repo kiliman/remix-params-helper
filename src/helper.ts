@@ -1,11 +1,10 @@
 import {
-  ZodRawShape,
-  ZodNumber,
-  ZodBoolean,
   ZodArray,
+  ZodBoolean,
+  ZodNumber,
   ZodOptional,
-  ZodTypeAny,
   ZodString,
+  ZodTypeAny,
 } from 'zod'
 
 export function getParams<T>(
@@ -19,6 +18,10 @@ export function getParams<T>(
   let o: any = {}
   // @ts-ignore
   for (let [key, value] of Array.from(params)) {
+    // infer an empty param as if it wasn't defined in the first place
+    if (value === '') {
+      continue
+    }
     const def = shape[key]
     if (def) {
       processDef(def, o, key, value as string)

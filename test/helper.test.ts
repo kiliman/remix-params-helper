@@ -8,6 +8,7 @@ const mySchema = z.object({
   d: z.string().optional(),
   e: z.number(),
   f: z.string().optional(),
+  g: z.string().default('z'),
 })
 type MyParams = z.infer<typeof mySchema>
 
@@ -20,16 +21,17 @@ describe('test getParams', () => {
     params.set('c', 'true')
     params.set('e', '10')
     params.set('f', 'y')
+    params.set('g', '') // empty params should use the default value when provided one
 
     const { success, data } = getParams<MyParams>(params, mySchema)
 
     expect(success).toBe(true)
-    expect(data).toEqual({ a: 'x', b: [1, 2], c: true, e: 10, f: 'y' })
+    expect(data).toEqual({ a: 'x', b: [1, 2], c: true, e: 10, f: 'y', g: 'z' })
   })
 
   it('should return error', () => {
     const params = new URLSearchParams()
-    params.set('a', 'x')
+    params.set('a', '') // empty param should be inferred as if it was undefined
     params.append('b', '1')
     params.append('b', 'x') // invalid number
     //params.set('c', 'true') missing required param
@@ -37,6 +39,7 @@ describe('test getParams', () => {
 
     const { success, errors } = getParams<MyParams>(params, mySchema)
     expect(success).toBe(false)
+    expect(errors?.['a']).toEqual(`Required string for a`)
     expect(errors?.['b']).toEqual(
       `Expected number, received string 'x' for b[1]`,
     )
