@@ -1,6 +1,7 @@
 import {
   ZodArray,
   ZodBoolean,
+  ZodDefault,
   ZodNumber,
   ZodOptional,
   ZodString,
@@ -108,8 +109,9 @@ function processDef(def: ZodTypeAny, o: any, key: string, value: string) {
     parsedValue = isNaN(num) ? value : num
   } else if (def instanceof ZodBoolean) {
     parsedValue = Boolean(value)
-  } else if (def instanceof ZodOptional) {
-    processDef(def.unwrap(), o, key, value)
+  } else if (def instanceof ZodOptional || def instanceof ZodDefault) {
+    // def._def.innerType is the same as ZodOptional's .unwrap(), which unfortunately doesn't exist on ZodDefault
+    processDef(def._def.innerType, o, key, value)
     // return here to prevent overwriting the result of the recursive call
     return
   } else if (def instanceof ZodArray) {
