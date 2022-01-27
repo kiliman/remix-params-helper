@@ -1,6 +1,9 @@
 # Remix Params Helper
+
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+
 [![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
+
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 This package makes it simple to use [Zod](https://github.com/colinhacks/zod) with
@@ -45,6 +48,16 @@ This function is used to parse and validate data from `URLSearchParams`, `FormDa
 It returns an object that has `success` property. If `result.success` is `true` then `result.data` will be a valid object of type `T`.
 
 Otherwise, `result.errors` will be an object with keys for each property that failed validation. The key value will be the validation error message.
+
+> NOTE: Error messages will now return the message from directly Zod. You can customize the error message
+> in your Zod schema [Zod Custom Error Messages](https://github.com/colinhacks/zod#custom-error-messages)
+
+> If the validation returns multiple errors for the same key, it will return an array, otherwise it will be a string.
+
+```ts
+errors[key] = 'message'
+errors[key] = ['message 1', 'message 2']
+```
 
 Unlike `Object.fromEntries()`, this function also supports multi-value keys and will convert them to an array. So `e=1&e=2&e=3` will convert it to `e: [1,2,3]`
 

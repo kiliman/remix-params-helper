@@ -44,6 +44,16 @@ export function getParams<T>(
     return { success: true, data: result.data as T, errors: undefined }
   } else {
     let errors: any = {}
+    const addError = (key: string, message: string) => {
+      if (!errors.hasOwnProperty(key)) {
+        errors[key] = message
+      } else {
+        if (!Array.isArray(errors[key])) {
+          errors[key] = [errors[key]]
+        }
+        errors[key].push(message)
+      }
+    }
     for (let issue of result.error.issues) {
       const { message, path, code, expected, received } = issue
       const [key, index] = path
@@ -53,20 +63,7 @@ export function getParams<T>(
         value = value[index]
         prop = `${key}[${index}]`
       }
-      switch (code) {
-        case 'invalid_type':
-          if (received === 'undefined') {
-            errors[key] = `Required ${expected} for ${prop}`
-          } else {
-            errors[
-              key
-            ] = `Expected ${expected}, received ${received} '${value}' for ${prop}`
-          }
-          break
-        default:
-          errors[key] = `${message} for ${prop}`
-          break
-      }
+      addError(key, message)
     }
     return { success: false, data: undefined, errors }
   }

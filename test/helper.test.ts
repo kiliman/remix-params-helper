@@ -2,21 +2,32 @@ import { z } from 'zod'
 import { getParams, useFormInputProps } from '../src/helper'
 
 const mySchema = z.object({
-  a: z.string(),
+  a: z
+    .string({
+      required_error: 'a is required',
+      invalid_type_error: 'a must be a string',
+    })
+    .min(5, { message: 'a must be at least 5 characters' })
+    .max(10, { message: 'a must be at most 10 characters' }),
   b: z.array(z.number()),
-  c: z.boolean(),
+  c: z.boolean({ required_error: 'c is required' }),
   d: z.string().optional(),
   e: z.number(),
   f: z.string().optional(),
   g: z.string().default('z'),
   h: z.string().default('z'),
+  email: z
+    .string()
+    .email({ message: 'Invalid email' })
+    .min(5, { message: 'Email must be at least 5 characters' })
+    .optional(),
 })
 type MyParams = z.infer<typeof mySchema>
 
 describe('test getParams', () => {
   it('should return data from URLSearchParams', () => {
     const params = new URLSearchParams()
-    params.set('a', 'x')
+    params.set('a', 'abcdef')
     params.append('b', '1')
     params.append('b', '2')
     params.set('c', 'true')
@@ -29,7 +40,7 @@ describe('test getParams', () => {
 
     expect(success).toBe(true)
     expect(data).toEqual({
-      a: 'x',
+      a: 'abcdef',
       b: [1, 2],
       c: true,
       e: 10,
@@ -46,17 +57,17 @@ describe('test getParams', () => {
     params.append('b', 'x') // invalid number
     //params.set('c', 'true') missing required param
     params.set('e', 'xyz') // invalid number
-
+    params.set('email', 'abc')
     const { success, errors } = getParams<MyParams>(params, mySchema)
     expect(success).toBe(false)
-    expect(errors?.['a']).toEqual(`Required string for a`)
-    expect(errors?.['b']).toEqual(
-      `Expected number, received string 'x' for b[1]`,
-    )
-    expect(errors?.['c']).toEqual(`Required boolean for c`)
-    expect(errors?.['e']).toEqual(
-      `Expected number, received string 'xyz' for e`,
-    )
+    expect(errors?.['a']).toEqual(`a is required`)
+    expect(errors?.['b']).toEqual('Expected number, received string')
+    expect(errors?.['c']).toEqual(`c is required`)
+    expect(errors?.['e']).toEqual('Expected number, received string')
+    expect(errors?.['email']).toEqual([
+      'Invalid email',
+      'Email must be at least 5 characters',
+    ])
   })
 })
 
