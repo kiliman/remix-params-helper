@@ -1,11 +1,11 @@
 import {
-  ZodRawShape,
-  ZodNumber,
-  ZodBoolean,
   ZodArray,
+  ZodBoolean,
+  ZodDefault,
+  ZodNumber,
   ZodOptional,
-  ZodTypeAny,
   ZodString,
+  ZodTypeAny,
 } from 'zod'
 
 export function getParams<T>(
@@ -19,6 +19,10 @@ export function getParams<T>(
   let o: any = {}
   // @ts-ignore
   for (let [key, value] of Array.from(params)) {
+    // infer an empty param as if it wasn't defined in the first place
+    if (value === '') {
+      continue
+    }
     const def = shape[key]
     if (def) {
       processDef(def, o, key, value as string)
@@ -40,6 +44,16 @@ export function getParams<T>(
     return { success: true, data: result.data as T, errors: undefined }
   } else {
     let errors: any = {}
+    const addError = (key: string, message: string) => {
+      if (!errors.hasOwnProperty(key)) {
+        errors[key] = message
+      } else {
+        if (!Array.isArray(errors[key])) {
+          errors[key] = [errors[key]]
+        }
+        errors[key].push(message)
+      }
+    }
     for (let issue of result.error.issues) {
       const { message, path, code, expected, received } = issue
       const [key, index] = path
@@ -49,20 +63,7 @@ export function getParams<T>(
         value = value[index]
         prop = `${key}[${index}]`
       }
-      switch (code) {
-        case 'invalid_type':
-          if (received === 'undefined') {
-            errors[key] = `Required ${expected} for ${prop}`
-          } else {
-            errors[
-              key
-            ] = `Expected ${expected}, received ${received} '${value}' for ${prop}`
-          }
-          break
-        default:
-          errors[key] = `${message} for ${prop}`
-          break
-      }
+      addError(key, message)
     }
     return { success: false, data: undefined, errors }
   }
@@ -104,9 +105,13 @@ function processDef(def: ZodTypeAny, o: any, key: string, value: string) {
     const num = Number(value)
     parsedValue = isNaN(num) ? value : num
   } else if (def instanceof ZodBoolean) {
-    parsedValue = Boolean(value)
-  } else if (def instanceof ZodOptional) {
-    processDef(def.unwrap(), o, key, value)
+    parsedValue =
+      value === 'true' ? true : value === 'false' ? false : Boolean(value)
+  } else if (def instanceof ZodOptional || def instanceof ZodDefault) {
+    // def._def.innerType is the same as ZodOptional's .unwrap(), which unfortunately doesn't exist on ZodDefault
+    processDef(def._def.innerType, o, key, value)
+    // return here to prevent overwriting the result of the recursive call
+    return
   } else if (def instanceof ZodArray) {
     if (o[key] === undefined) {
       o[key] = []

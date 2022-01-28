@@ -13,6 +13,9 @@ const ActionSchema = z.object({
   age: z.number(),
   number: z.number(),
   favorites: z.array(z.string()),
+  accept: z.boolean(),
+  remember: z.boolean().optional(),
+  answer: z.boolean().optional(),
 })
 
 type ActionType = z.infer<typeof ActionSchema>
@@ -90,6 +93,31 @@ export default function ActionsDemo() {
                   </label>
                 ),
               )}
+            </div>
+          </label>
+          <label>
+            <div>Accept (must be checked):</div>
+            <input {...inputProps('accept')} />
+          </label>
+          <label>
+            <div>Remember Password:</div>
+            <input {...inputProps('remember')} />
+          </label>
+          <label>
+            <div>Question:</div>
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <label>
+                <input {...inputProps('answer')} type="radio" value="true" />{' '}
+                Yes
+              </label>
+              <label>
+                <input {...inputProps('answer')} type="radio" value="false" />{' '}
+                No
+              </label>
+              <label>
+                <input {...inputProps('answer')} type="radio" value="" /> Not
+                answered
+              </label>
             </div>
           </label>
 
