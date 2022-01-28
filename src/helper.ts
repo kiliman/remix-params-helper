@@ -105,7 +105,8 @@ function processDef(def: ZodTypeAny, o: any, key: string, value: string) {
     const num = Number(value)
     parsedValue = isNaN(num) ? value : num
   } else if (def instanceof ZodBoolean) {
-    parsedValue = Boolean(value)
+    parsedValue =
+      value === 'true' ? true : value === 'false' ? false : Boolean(value)
   } else if (def instanceof ZodOptional || def instanceof ZodDefault) {
     // def._def.innerType is the same as ZodOptional's .unwrap(), which unfortunately doesn't exist on ZodDefault
     processDef(def._def.innerType, o, key, value)
