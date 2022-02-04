@@ -24,7 +24,7 @@ Zod is a peer dependency
 
 Zod is used to validate untyped data and either return a valid object or a list of errors encounted.
 
-To use the helper, first define your Zod schema and generate a TypeScript type using `z.infer`.
+To use the helper, first define your Zod schema:
 
 ```ts
 const ParamsSchema = z.object({
@@ -34,16 +34,15 @@ const ParamsSchema = z.object({
   d: z.string().optional(),
   e: z.array(z.number()),
 })
-type ParamsType = z.infer<typeof ParamsSchema>
 ```
 
 ## 📝 API Reference
 
-### `getParams<T>(params, schema)`
+### `getParams(params, schema)`
 
 This function is used to parse and validate data from `URLSearchParams`, `FormData`, or Remix `params` object.
 
-It returns an object that has `success` property. If `result.success` is `true` then `result.data` will be a valid object of type `T`.
+It returns an object that has `success` property. If `result.success` is `true` then `result.data` will be a valid object of type `T`, inferred from your Zod schema.
 
 Otherwise, `result.errors` will be an object with keys for each property that failed validation. The key value will be the validation error message.
 
@@ -61,7 +60,33 @@ Unlike `Object.fromEntries()`, this function also supports multi-value keys and 
 
 ```ts
 const url = new URL(request.url)
-const result = getParams<ParamsType>(url.searchParams, ParamsSchema)
+const result = getParams(url.searchParams, ParamsSchema)
+if (!result.success) {
+  throw new Response(result.errors, { status: 400 })
+}
+// these variable will be typed and valid
+const { a, b, c, d, e } = result.data
+```
+
+### `getSearchParams(request, schema)`
+
+This helper function is used to parse and validate `URLSearchParams` data from the `Request` found in the Remix action/loader, it returns the same result values as `getParams`.
+
+```ts
+const result = getSearchParams(request, ParamsSchema)
+if (!result.success) {
+  throw new Response(result.errors, { status: 400 })
+}
+// these variable will be typed and valid
+const { a, b, c, d, e } = result.data
+```
+
+### `getFormData(request, schema)`
+
+This helper function is used to parse and validate `FormData` data from the `Request` found in the Remix action/loader, it returns the same result values as `getParams`.
+
+```ts
+const result = await getFormData(request, ParamsSchema)
 if (!result.success) {
   throw new Response(result.errors, { status: 400 })
 }

@@ -1,4 +1,5 @@
 import {
+  z,
   ZodArray,
   ZodBoolean,
   ZodDefault,
@@ -7,10 +8,11 @@ import {
   ZodNumber,
   ZodOptional,
   ZodString,
+  ZodType,
   ZodTypeAny,
 } from 'zod'
 
-export function getParams<T>(
+function getParamsInternal<T>(
   params: URLSearchParams | FormData | any,
   schema: any,
 ):
@@ -69,6 +71,32 @@ export function getParams<T>(
     }
     return { success: false, data: undefined, errors }
   }
+}
+
+export function getParams<T extends ZodType<any, any, any>>(
+  params: URLSearchParams | FormData | any,
+  schema: T,
+) {
+  type ParamsType = z.infer<T>
+  return getParamsInternal<ParamsType>(params, schema)
+}
+
+export function getSearchParams<T extends ZodType<any, any, any>>(
+  request: Pick<Request, 'url'>,
+  schema: T,
+) {
+  type ParamsType = z.infer<T>
+  let url = new URL(request.url)
+  return getParams<ParamsType>(url.searchParams, schema)
+}
+
+export async function getFormData<T extends ZodType<any, any, any>>(
+  request: Pick<Request, 'formData'>,
+  schema: T,
+) {
+  type ParamsType = z.infer<T>
+  let data = await request.formData()
+  return getParams<ParamsType>(data, schema)
 }
 
 export type InputPropType = {

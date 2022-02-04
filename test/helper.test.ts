@@ -1,5 +1,10 @@
 import { z } from 'zod'
-import { getParams, useFormInputProps } from '../src/helper'
+import {
+  getFormData,
+  getParams,
+  getSearchParams,
+  useFormInputProps,
+} from '../src/helper'
 
 enum TestEnum {
   A = 'A',
@@ -29,7 +34,6 @@ const mySchema = z.object({
     .min(5, { message: 'Email must be at least 5 characters' })
     .optional(),
 })
-type MyParams = z.infer<typeof mySchema>
 
 describe('test getParams', () => {
   it('should return data from URLSearchParams', () => {
@@ -45,10 +49,10 @@ describe('test getParams', () => {
     params.set('zodEnum', 'A')
     params.set('nativeEnum', 'B')
 
-    const { success, data, errors } = getParams<MyParams>(params, mySchema)
-    console.log(errors)
+    const { success, data, errors } = getParams(params, mySchema)
 
     expect(success).toBe(true)
+    expect(errors).toBeUndefined()
     expect(data).toEqual({
       a: 'abcdef',
       b: [1, 2],
@@ -72,8 +76,147 @@ describe('test getParams', () => {
     params.set('email', 'abc')
     params.set('zodEnum', 'C')
     params.set('nativeEnum', 'D')
-    const { success, errors } = getParams<MyParams>(params, mySchema)
+
+    const { success, errors } = getParams(params, mySchema)
+
     expect(success).toBe(false)
+    expect(errors?.['a']).toEqual(`a is required`)
+    expect(errors?.['b']).toEqual('Expected number, received string')
+    expect(errors?.['c']).toEqual(`c is required`)
+    expect(errors?.['e']).toEqual('Expected number, received string')
+    expect(errors?.['zodEnum']).toEqual(
+      "Invalid enum value. Expected 'A' | 'B', received 'C'",
+    )
+    expect(errors?.['nativeEnum']).toEqual(
+      "Invalid enum value. Expected 'A' | 'B', received 'D'",
+    )
+    expect(errors?.['email']).toEqual([
+      'Invalid email',
+      'Email must be at least 5 characters',
+    ])
+  })
+})
+
+describe('test getSearchParamsFromRequest', () => {
+  it('should return data from Request', () => {
+    const url = new URL('http://localhost')
+    url.searchParams.set('a', 'abcdef')
+    url.searchParams.append('b', '1')
+    url.searchParams.append('b', '2')
+    url.searchParams.set('c', 'true')
+    url.searchParams.set('e', '10')
+    url.searchParams.set('f', 'y')
+    url.searchParams.set('g', '') // empty url.searchParams should use the default value when provided one
+    url.searchParams.set('h', 'something')
+    url.searchParams.set('zodEnum', 'A')
+    url.searchParams.set('nativeEnum', 'B')
+
+    const { success, data, errors } = getSearchParams(
+      { url: url.toString() },
+      mySchema,
+    )
+
+    expect(success).toBe(true)
+    expect(errors).toBeUndefined()
+    expect(data).toEqual({
+      a: 'abcdef',
+      b: [1, 2],
+      c: true,
+      e: 10,
+      f: 'y',
+      g: 'z',
+      h: 'something',
+      zodEnum: 'A',
+      nativeEnum: TestEnum.B,
+    })
+  })
+
+  it('should return error', () => {
+    const url = new URL('http://localhost')
+    url.searchParams.set('a', '') // empty param should be inferred as if it was undefined
+    url.searchParams.append('b', '1')
+    url.searchParams.append('b', 'x') // invalid number
+    //url.searchParams.set('c', 'true') missing required param
+    url.searchParams.set('e', 'xyz') // invalid number
+    url.searchParams.set('email', 'abc')
+    url.searchParams.set('zodEnum', 'C')
+    url.searchParams.set('nativeEnum', 'D')
+
+    const { success, data, errors } = getSearchParams(
+      { url: url.toString() },
+      mySchema,
+    )
+    expect(success).toBe(false)
+    expect(data).toBeUndefined()
+    expect(errors?.['a']).toEqual(`a is required`)
+    expect(errors?.['b']).toEqual('Expected number, received string')
+    expect(errors?.['c']).toEqual(`c is required`)
+    expect(errors?.['e']).toEqual('Expected number, received string')
+    expect(errors?.['zodEnum']).toEqual(
+      "Invalid enum value. Expected 'A' | 'B', received 'C'",
+    )
+    expect(errors?.['nativeEnum']).toEqual(
+      "Invalid enum value. Expected 'A' | 'B', received 'D'",
+    )
+    expect(errors?.['email']).toEqual([
+      'Invalid email',
+      'Email must be at least 5 characters',
+    ])
+  })
+})
+
+describe('test getFormDataFromRequest', () => {
+  it('should return data from Request', async () => {
+    let formData = new FormData()
+    formData.set('a', 'abcdef')
+    formData.append('b', '1')
+    formData.append('b', '2')
+    formData.set('c', 'true')
+    formData.set('e', '10')
+    formData.set('f', 'y')
+    formData.set('g', '') // empty formData should use the default value when provided one
+    formData.set('h', 'something')
+    formData.set('zodEnum', 'A')
+    formData.set('nativeEnum', 'B')
+
+    const { success, data, errors } = await getFormData(
+      { formData: async () => formData },
+      mySchema,
+    )
+
+    expect(success).toBe(true)
+    expect(errors).toBeUndefined()
+    expect(data).toEqual({
+      a: 'abcdef',
+      b: [1, 2],
+      c: true,
+      e: 10,
+      f: 'y',
+      g: 'z',
+      h: 'something',
+      zodEnum: 'A',
+      nativeEnum: TestEnum.B,
+    })
+  })
+
+  it('should return error', async () => {
+    let formData = new FormData()
+    formData.set('a', '') // empty param should be inferred as if it was undefined
+    formData.append('b', '1')
+    formData.append('b', 'x') // invalid number
+    //formData.set('c', 'true') missing required param
+    formData.set('e', 'xyz') // invalid number
+    formData.set('email', 'abc')
+    formData.set('zodEnum', 'C')
+    formData.set('nativeEnum', 'D')
+
+    const { success, data, errors } = await getFormData(
+      { formData: async () => formData },
+      mySchema,
+    )
+
+    expect(success).toBe(false)
+    expect(data).toBeUndefined()
     expect(errors?.['a']).toEqual(`a is required`)
     expect(errors?.['b']).toEqual('Expected number, received string')
     expect(errors?.['c']).toEqual(`c is required`)
