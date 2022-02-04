@@ -2,6 +2,8 @@ import {
   ZodArray,
   ZodBoolean,
   ZodDefault,
+  ZodEnum,
+  ZodNativeEnum,
   ZodNumber,
   ZodOptional,
   ZodString,
@@ -107,6 +109,8 @@ function processDef(def: ZodTypeAny, o: any, key: string, value: string) {
   } else if (def instanceof ZodBoolean) {
     parsedValue =
       value === 'true' ? true : value === 'false' ? false : Boolean(value)
+  } else if (def instanceof ZodNativeEnum || def instanceof ZodEnum) {
+    parsedValue = value
   } else if (def instanceof ZodOptional || def instanceof ZodDefault) {
     // def._def.innerType is the same as ZodOptional's .unwrap(), which unfortunately doesn't exist on ZodDefault
     processDef(def._def.innerType, o, key, value)

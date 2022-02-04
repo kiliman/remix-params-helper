@@ -1,6 +1,11 @@
 import { z } from 'zod'
 import { getParams, useFormInputProps } from '../src/helper'
 
+enum TestEnum {
+  A = 'A',
+  B = 'B',
+}
+
 const mySchema = z.object({
   a: z
     .string({
@@ -16,6 +21,8 @@ const mySchema = z.object({
   f: z.string().optional(),
   g: z.string().default('z'),
   h: z.string().default('z'),
+  zodEnum: z.enum(['A', 'B']),
+  nativeEnum: z.nativeEnum(TestEnum).optional(),
   email: z
     .string()
     .email({ message: 'Invalid email' })
@@ -35,8 +42,11 @@ describe('test getParams', () => {
     params.set('f', 'y')
     params.set('g', '') // empty params should use the default value when provided one
     params.set('h', 'something')
+    params.set('zodEnum', 'A')
+    params.set('nativeEnum', 'B')
 
-    const { success, data } = getParams<MyParams>(params, mySchema)
+    const { success, data, errors } = getParams<MyParams>(params, mySchema)
+    console.log(errors)
 
     expect(success).toBe(true)
     expect(data).toEqual({
@@ -47,6 +57,8 @@ describe('test getParams', () => {
       f: 'y',
       g: 'z',
       h: 'something',
+      zodEnum: 'A',
+      nativeEnum: TestEnum.B,
     })
   })
 
@@ -58,12 +70,20 @@ describe('test getParams', () => {
     //params.set('c', 'true') missing required param
     params.set('e', 'xyz') // invalid number
     params.set('email', 'abc')
+    params.set('zodEnum', 'C')
+    params.set('nativeEnum', 'D')
     const { success, errors } = getParams<MyParams>(params, mySchema)
     expect(success).toBe(false)
     expect(errors?.['a']).toEqual(`a is required`)
     expect(errors?.['b']).toEqual('Expected number, received string')
     expect(errors?.['c']).toEqual(`c is required`)
     expect(errors?.['e']).toEqual('Expected number, received string')
+    expect(errors?.['zodEnum']).toEqual(
+      "Invalid enum value. Expected 'A' | 'B', received 'C'",
+    )
+    expect(errors?.['nativeEnum']).toEqual(
+      "Invalid enum value. Expected 'A' | 'B', received 'D'",
+    )
     expect(errors?.['email']).toEqual([
       'Invalid email',
       'Email must be at least 5 characters',
