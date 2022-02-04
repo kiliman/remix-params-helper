@@ -69,7 +69,7 @@ const result = getParams(url.searchParams, ParamsSchema)
 if (!result.success) {
   throw new Response(result.errors, { status: 400 })
 }
-// these variable will be typed and valid
+// these variables will be typed and valid
 const { a, b, c, d, e } = result.data
 ```
 
@@ -80,7 +80,7 @@ This helper function is used to parse and validate `URLSearchParams` data from t
 ```ts
 const result = getSearchParams(request, ParamsSchema)
 if (!result.success) {
-  throw new Response(result.errors, { status: 400 })
+  return json(result.errors, { status: 400 })
 }
 // these variable will be typed and valid
 const { a, b, c, d, e } = result.data
@@ -93,9 +93,9 @@ This helper function is used to parse and validate `FormData` data from the `Req
 ```ts
 const result = await getFormData(request, ParamsSchema)
 if (!result.success) {
-  throw new Response(result.errors, { status: 400 })
+  return json(result.errors, { status: 400 })
 }
-// these variable will be typed and valid
+// these variables will be typed and valid
 const { a, b, c, d, e } = result.data
 ```
 
