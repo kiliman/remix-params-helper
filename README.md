@@ -8,6 +8,11 @@ This package makes it simple to use [Zod](https://github.com/colinhacks/zod) wit
 standard [URLSearchParams](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) and [FormData](https://developer.mozilla.org/en-US/docs/Web/API/FormData)
 which are typically used in [Remix](https://remix.run) apps.
 
+## 🚨 Breaking Change v0.3.0
+
+Helper no longer requires explicit types on helper. Thanks @zolrath. This will
+definitely cut down on the boilerplate.
+
 ## 🚧 Work in progress
 
 This package is still work in progress. I'll be refining the API and fixing the TypeScript types.
