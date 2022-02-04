@@ -1,6 +1,6 @@
 {
   "name": "remix-params-helper",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "",
   "browser": "/dist/helper.js",
   "main": "./dist/cjs/helper.js",
@@ -13,7 +13,8 @@
     "lint": "eslint --ext .ts,.tsx src/",
     "test": "jest",
     "contributors:add": "all-contributors add",
-    "contributors:generate": "all-contributors generate"
+    "contributors:generate": "all-contributors generate",
+    "prepublish": "npm run build"
   },
   "author": "Michael J. Carter <kiliman@gmail.com> (https://kiliman.dev/)",
   "repository": {
