@@ -167,8 +167,6 @@ function defInputType(def: ZodTypeAny) {
     type = 'number'
   } else if (def instanceof ZodBoolean) {
     type = 'checkbox'
-  } else if (def instanceof ZodNativeEnum || def instanceof ZodEnum) {
-    type = 'select'
   } else if (def instanceof ZodArray) {
     type = defInputType(def.element)
   } else if (def instanceof ZodOptional) {
