@@ -253,17 +253,6 @@ describe('test useFormInputProps', () => {
       name: 'e',
       required: true,
     })
-
-    expect(inputProps('zodEnum')).toEqual({
-      type: 'select',
-      name: 'zodEnum',
-      required: true,
-    })
-
-    expect(inputProps('nativeEnum')).toEqual({
-      type: 'select',
-      name: 'nativeEnum',
-    })
   })
   it('should throw with invalid key', () => {
     const inputProps = useFormInputProps(mySchema)
