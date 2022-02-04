@@ -86,7 +86,7 @@ const { a, b, c, d, e } = result.data
 This helper function is used to parse and validate `FormData` data from the `Request` found in the Remix action/loader, it returns the same result values as `getParams`.
 
 ```ts
-const result = getFormData(request, ParamsSchema)
+const result = await getFormData(request, ParamsSchema)
 if (!result.success) {
   throw new Response(result.errors, { status: 400 })
 }
