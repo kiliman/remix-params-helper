@@ -1,14 +1,18 @@
 import {
+  z,
   ZodArray,
   ZodBoolean,
   ZodDefault,
+  ZodEnum,
+  ZodNativeEnum,
   ZodNumber,
   ZodOptional,
   ZodString,
+  ZodType,
   ZodTypeAny,
 } from 'zod'
 
-export function getParams<T>(
+function getParamsInternal<T>(
   params: URLSearchParams | FormData | any,
   schema: any,
 ):
@@ -69,6 +73,32 @@ export function getParams<T>(
   }
 }
 
+export function getParams<T extends ZodType<any, any, any>>(
+  params: URLSearchParams | FormData | any,
+  schema: T,
+) {
+  type ParamsType = z.infer<T>
+  return getParamsInternal<ParamsType>(params, schema)
+}
+
+export function getSearchParams<T extends ZodType<any, any, any>>(
+  request: Pick<Request, 'url'>,
+  schema: T,
+) {
+  type ParamsType = z.infer<T>
+  let url = new URL(request.url)
+  return getParamsInternal<ParamsType>(url.searchParams, schema)
+}
+
+export async function getFormData<T extends ZodType<any, any, any>>(
+  request: Pick<Request, 'formData'>,
+  schema: T,
+) {
+  type ParamsType = z.infer<T>
+  let data = await request.formData()
+  return getParamsInternal<ParamsType>(data, schema)
+}
+
 export type InputPropType = {
   name: string
   type: string
@@ -107,6 +137,8 @@ function processDef(def: ZodTypeAny, o: any, key: string, value: string) {
   } else if (def instanceof ZodBoolean) {
     parsedValue =
       value === 'true' ? true : value === 'false' ? false : Boolean(value)
+  } else if (def instanceof ZodNativeEnum || def instanceof ZodEnum) {
+    parsedValue = value
   } else if (def instanceof ZodOptional || def instanceof ZodDefault) {
     // def._def.innerType is the same as ZodOptional's .unwrap(), which unfortunately doesn't exist on ZodDefault
     processDef(def._def.innerType, o, key, value)
