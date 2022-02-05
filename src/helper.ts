@@ -87,7 +87,7 @@ export function getSearchParams<T extends ZodType<any, any, any>>(
 ) {
   type ParamsType = z.infer<T>
   let url = new URL(request.url)
-  return getParams<ParamsType>(url.searchParams, schema)
+  return getParamsInternal<ParamsType>(url.searchParams, schema)
 }
 
 export async function getFormData<T extends ZodType<any, any, any>>(
@@ -96,7 +96,7 @@ export async function getFormData<T extends ZodType<any, any, any>>(
 ) {
   type ParamsType = z.infer<T>
   let data = await request.formData()
-  return getParams<ParamsType>(data, schema)
+  return getParamsInternal<ParamsType>(data, schema)
 }
 
 export type InputPropType = {
