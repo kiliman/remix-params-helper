@@ -36,6 +36,19 @@ const mySchema = z.object({
 })
 
 describe('test getParams', () => {
+  it('should return data from params', () => {
+    const params = { a: 'a value' }
+    const schema = z.object({ a: z.string() })
+
+    const { success, data, errors } = getParams(params, schema)
+
+    expect(success).toBe(true)
+    expect(errors).toBeUndefined()
+    expect(data).toEqual({
+      a: 'a value',
+    })
+  })
+
   it('should return data from URLSearchParams', () => {
     const params = new URLSearchParams()
     params.set('a', 'abcdef')
