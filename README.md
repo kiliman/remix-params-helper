@@ -1,7 +1,9 @@
 # Remix Params Helper
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+
 [![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors-)
+
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 This package makes it simple to use [Zod](https://github.com/colinhacks/zod) with
@@ -29,7 +31,8 @@ Zod is a peer dependency
 
 Zod is used to validate untyped data and either return a valid object or a list of errors encounted.
 
-To use the helper, first define your Zod schema:
+To use the helper, first define your Zod schema. It also supports nested objects and
+arrays.
 
 ```ts
 const ParamsSchema = z.object({
@@ -97,6 +100,52 @@ if (!result.success) {
 }
 // these variables will be typed and valid
 const { a, b, c, d, e } = result.data
+```
+
+### ✨ New in v0.4.0 Support for nested objects and arrays
+
+Input names should be dot-separated (e.g, `address.street`). Array names can include
+the square brackets (e.g., `favoriteFoods[]`). These are optional. The helper will
+correctly determine if the value is an array.
+
+```ts
+describe('test nested objects and arrays', () => {
+  it('should validate nested object', () => {
+    const mySchema = z.object({
+      name: z.string(),
+      address: z.object({
+        street: z.string(),
+        city: z.string(),
+        state: z.string(),
+        zip: z.string(),
+      }),
+    })
+    const formData = new FormData()
+    formData.set('name', 'abcdef')
+    formData.set('address.street', '123 Main St')
+    formData.set('address.city', 'Anytown')
+    formData.set('address.state', 'US')
+    formData.set('address.zip', '12345')
+    const result = getParams(formData, mySchema)
+    expect(result.success).toBe(true)
+    expect(result.data.address.street).toBe('123 Main St')
+  })
+  it('should validate arrays with [] syntax', () => {
+    const mySchema = z.object({
+      name: z.string(),
+      favoriteFoods: z.array(z.string()),
+    })
+    const formData = new FormData()
+    formData.set('name', 'abcdef')
+    formData.append('favoriteFoods[]', 'Pizza')
+    formData.append('favoriteFoods[]', 'Tacos')
+    formData.append('favoriteFoods[]', 'Hamburgers')
+    formData.append('favoriteFoods[]', 'Sushi')
+    const result = getParams(formData, mySchema)
+    expect(result.success).toBe(true)
+    expect(result.data.favoriteFoods?.length).toBe(4)
+  })
+})
 ```
 
 ### `useFormInputProps(schema)`
