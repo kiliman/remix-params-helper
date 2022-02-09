@@ -21,7 +21,6 @@ function isIterable(
 
 function parseParams(o: any, schema: any, key: string, value: any) {
   const shape = schema instanceof ZodObject ? schema.shape : schema
-  console.log(`parseParams`, { o, shape, key, value })
   if (key.includes('.')) {
     let [parentProp, ...rest] = key.split('.')
     o[parentProp] = o[parentProp] ?? {}
@@ -30,7 +29,6 @@ function parseParams(o: any, schema: any, key: string, value: any) {
   }
 
   const def = shape[key]
-  console.log(def)
   if (def) {
     processDef(def, o, key, value as string)
   } else {
