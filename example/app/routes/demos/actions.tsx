@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import type { ActionFunction } from 'remix'
 import { Form, json, useActionData, redirect } from 'remix'
 import { z } from 'zod'
-import { getParams, useFormInputProps } from '~/utils/helper'
+import { getFormData, useFormInputProps } from '~/utils/helper'
 
 export function meta() {
   return { title: 'Actions Demo' }
@@ -24,8 +24,7 @@ type ActionType = z.infer<typeof ActionSchema>
 // - https://remix.run/api/conventions#action
 // - https://remix.run/guides/data-updates
 export let action: ActionFunction = async ({ request }) => {
-  let formData = await request.formData()
-  const result = getParams<ActionType>(formData, ActionSchema)
+  const result = await getFormData(request, ActionSchema)
   // Typical action workflows start with validating the form data that just came
   // over the network. Clientside validation is fine, but you definitely need it
   // server side.  If there's a problem, return the the data and the component

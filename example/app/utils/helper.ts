@@ -6,43 +6,69 @@ import {
   ZodEnum,
   ZodNativeEnum,
   ZodNumber,
+  ZodObject,
   ZodOptional,
   ZodString,
   ZodType,
   ZodTypeAny,
 } from 'zod'
 
+function isIterable(
+  maybeIterable: unknown,
+): maybeIterable is Iterable<unknown> {
+  return Symbol.iterator in Object(maybeIterable)
+}
+
+function parseParams(o: any, schema: any, key: string, value: any) {
+  const shape = schema instanceof ZodObject ? schema.shape : schema
+  console.log(`parseParams`, { o, shape, key, value })
+  if (key.includes('.')) {
+    let [parentProp, ...rest] = key.split('.')
+    o[parentProp] = o[parentProp] ?? {}
+    parseParams(o[parentProp], shape[parentProp], rest.join('.'), value)
+    return
+  }
+
+  const def = shape[key]
+  console.log(def)
+  if (def) {
+    processDef(def, o, key, value as string)
+  } else {
+    if (o.hasOwnProperty(key)) {
+      if (!Array.isArray(o[key])) {
+        o[key] = [o[key]]
+      }
+      o[key].push(value)
+    } else {
+      o[key] = value
+    }
+  }
+}
+
 function getParamsInternal<T>(
-  params: URLSearchParams | FormData | any,
+  params: URLSearchParams | FormData | Record<string, string | undefined>,
   schema: any,
 ):
   | { success: true; data: T; errors: undefined }
   | { success: false; data: undefined; errors: { [key: string]: string } } {
   // @ts-ignore
-  const shape = schema.shape as any
   let o: any = {}
-  // @ts-ignore
-  for (let [key, value] of Array.from(params)) {
+  let entries: [string, unknown][] = []
+  if (isIterable(params)) {
+    entries = Array.from(params)
+  } else {
+    entries = Object.entries(params)
+  }
+  for (let [key, value] of entries) {
     // infer an empty param as if it wasn't defined in the first place
     if (value === '') {
       continue
     }
-    const def = shape[key]
-    if (def) {
-      processDef(def, o, key, value as string)
-    } else {
-      if (o.hasOwnProperty(key)) {
-        if (!Array.isArray(o[key])) {
-          o[key] = [o[key]]
-        }
-        o[key].push(value)
-      } else {
-        o[key] = value
-      }
-    }
+    // remove [] from key since we already handle multi-value params
+    key = key.replace(/\[\]/g, '')
+    parseParams(o, schema, key, value)
   }
 
-  // @ts-ignore
   const result = schema.safeParse(o)
   if (result.success) {
     return { success: true, data: result.data as T, errors: undefined }
@@ -74,7 +100,7 @@ function getParamsInternal<T>(
 }
 
 export function getParams<T extends ZodType<any, any, any>>(
-  params: URLSearchParams | FormData | any,
+  params: URLSearchParams | FormData | Record<string, string | undefined>,
   schema: T,
 ) {
   type ParamsType = z.infer<T>
@@ -106,12 +132,10 @@ export type InputPropType = {
 }
 
 export function useFormInputProps(schema: any, options: any = {}) {
-  // @ts-ignore
   const shape = schema.shape
   const defaultOptions = options
   return function props(key: string, options: any = {}) {
     options = { ...defaultOptions, ...options }
-    // @ts-ignore
     const def = shape[key]
     if (!def) {
       throw new Error(`no such key: ${key}`)
