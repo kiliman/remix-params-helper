@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.4.1
+
+- 🐛 Remove `console.log` from parseParams
+
 ## v0.4.0
 
 - ✨ Add support for nested objects and arrays
