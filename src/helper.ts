@@ -12,17 +12,27 @@ import {
   ZodTypeAny,
 } from 'zod'
 
+function isIterable(
+  maybeIterable: unknown,
+): maybeIterable is Iterable<unknown> {
+  return Symbol.iterator in Object(maybeIterable)
+}
+
 function getParamsInternal<T>(
-  params: URLSearchParams | FormData | any,
+  params: URLSearchParams | FormData | Record<string, string | undefined>,
   schema: any,
 ):
   | { success: true; data: T; errors: undefined }
   | { success: false; data: undefined; errors: { [key: string]: string } } {
-  // @ts-ignore
   const shape = schema.shape as any
   let o: any = {}
-  // @ts-ignore
-  for (let [key, value] of Array.from(params)) {
+  let entries: [string, unknown][] = []
+  if (isIterable(params)) {
+    entries = Array.from(params)
+  } else {
+    entries = Object.entries(params)
+  }
+  for (let [key, value] of entries) {
     // infer an empty param as if it wasn't defined in the first place
     if (value === '') {
       continue
@@ -42,7 +52,6 @@ function getParamsInternal<T>(
     }
   }
 
-  // @ts-ignore
   const result = schema.safeParse(o)
   if (result.success) {
     return { success: true, data: result.data as T, errors: undefined }
@@ -74,7 +83,7 @@ function getParamsInternal<T>(
 }
 
 export function getParams<T extends ZodType<any, any, any>>(
-  params: URLSearchParams | FormData | any,
+  params: URLSearchParams | FormData | Record<string, string | undefined>,
   schema: T,
 ) {
   type ParamsType = z.infer<T>
@@ -106,12 +115,10 @@ export type InputPropType = {
 }
 
 export function useFormInputProps(schema: any, options: any = {}) {
-  // @ts-ignore
   const shape = schema.shape
   const defaultOptions = options
   return function props(key: string, options: any = {}) {
     options = { ...defaultOptions, ...options }
-    // @ts-ignore
     const def = shape[key]
     if (!def) {
       throw new Error(`no such key: ${key}`)
