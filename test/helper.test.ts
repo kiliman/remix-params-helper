@@ -272,3 +272,45 @@ describe('test useFormInputProps', () => {
     expect(() => inputProps('x')).toThrowError()
   })
 })
+
+describe('test nested objects and arrays', () => {
+  it('should validate nested object', () => {
+    const mySchema = z.object({
+      name: z.string(),
+      address: z.object({
+        street: z.string(),
+        city: z.string(),
+        state: z.string(),
+        zip: z.string(),
+      }),
+    })
+    const formData = new FormData()
+    formData.set('name', 'abcdef')
+    formData.set('address.street', '123 Main St')
+    formData.set('address.city', 'Anytown')
+    formData.set('address.state', 'US')
+    formData.set('address.zip', '12345')
+    const result = getParams(formData, mySchema)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.address.street).toBe('123 Main St')
+    }
+  })
+  it('should validate arrays with [] syntax', () => {
+    const mySchema = z.object({
+      name: z.string(),
+      favoriteFoods: z.array(z.string()),
+    })
+    const formData = new FormData()
+    formData.set('name', 'abcdef')
+    formData.append('favoriteFoods[]', 'Pizza')
+    formData.append('favoriteFoods[]', 'Tacos')
+    formData.append('favoriteFoods[]', 'Hamburgers')
+    formData.append('favoriteFoods[]', 'Sushi')
+    const result = getParams(formData, mySchema)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.favoriteFoods?.length).toBe(4)
+    }
+  })
+})

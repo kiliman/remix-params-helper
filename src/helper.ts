@@ -6,6 +6,7 @@ import {
   ZodEnum,
   ZodNativeEnum,
   ZodNumber,
+  ZodObject,
   ZodOptional,
   ZodString,
   ZodType,
@@ -18,13 +19,39 @@ function isIterable(
   return Symbol.iterator in Object(maybeIterable)
 }
 
+function parseParams(o: any, schema: any, key: string, value: any) {
+  const shape = schema instanceof ZodObject ? schema.shape : schema
+  console.log(`parseParams`, { o, shape, key, value })
+  if (key.includes('.')) {
+    let [parentProp, ...rest] = key.split('.')
+    o[parentProp] = o[parentProp] ?? {}
+    parseParams(o[parentProp], shape[parentProp], rest.join('.'), value)
+    return
+  }
+
+  const def = shape[key]
+  console.log(def)
+  if (def) {
+    processDef(def, o, key, value as string)
+  } else {
+    if (o.hasOwnProperty(key)) {
+      if (!Array.isArray(o[key])) {
+        o[key] = [o[key]]
+      }
+      o[key].push(value)
+    } else {
+      o[key] = value
+    }
+  }
+}
+
 function getParamsInternal<T>(
   params: URLSearchParams | FormData | Record<string, string | undefined>,
   schema: any,
 ):
   | { success: true; data: T; errors: undefined }
   | { success: false; data: undefined; errors: { [key: string]: string } } {
-  const shape = schema.shape as any
+  // @ts-ignore
   let o: any = {}
   let entries: [string, unknown][] = []
   if (isIterable(params)) {
@@ -37,19 +64,9 @@ function getParamsInternal<T>(
     if (value === '') {
       continue
     }
-    const def = shape[key]
-    if (def) {
-      processDef(def, o, key, value as string)
-    } else {
-      if (o.hasOwnProperty(key)) {
-        if (!Array.isArray(o[key])) {
-          o[key] = [o[key]]
-        }
-        o[key].push(value)
-      } else {
-        o[key] = value
-      }
-    }
+    // remove [] from key since we already handle multi-value params
+    key = key.replace(/\[\]/g, '')
+    parseParams(o, schema, key, value)
   }
 
   const result = schema.safeParse(o)
