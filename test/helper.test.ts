@@ -2,6 +2,7 @@ import { z } from 'zod'
 import {
   getFormData,
   getParams,
+  getParamsOrFail,
   getSearchParams,
   useFormInputProps,
 } from '../src/helper'
@@ -245,6 +246,22 @@ describe('test getFormDataFromRequest', () => {
       'Email must be at least 5 characters',
     ])
   })
+})
+
+it('should throw error', async () => {
+  let formData = new FormData()
+  formData.set('a', '') // empty param should be inferred as if it was undefined
+  formData.append('b', '1')
+  formData.append('b', 'x') // invalid number
+  //formData.set('c', 'true') missing required param
+  formData.set('e', 'xyz') // invalid number
+  formData.set('email', 'abc')
+  formData.set('zodEnum', 'C')
+  formData.set('nativeEnum', 'D')
+
+  await expect(async () =>
+    getParamsOrFail(formData, mySchema),
+  ).rejects.toThrowError()
 })
 
 describe('test useFormInputProps', () => {

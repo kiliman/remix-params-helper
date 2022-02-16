@@ -123,6 +123,44 @@ export async function getFormData<T extends ZodType<any, any, any>>(
   return getParamsInternal<ParamsType>(data, schema)
 }
 
+export function getParamsOrFail<T extends ZodType<any, any, any>>(
+  params: URLSearchParams | FormData | Record<string, string | undefined>,
+  schema: T,
+) {
+  type ParamsType = z.infer<T>
+  const result = getParamsInternal<ParamsType>(params, schema)
+  if (!result.success) {
+    throw new Error(JSON.stringify(result.errors))
+  }
+  return result.data
+}
+
+export function getSearchParamsOrFail<T extends ZodType<any, any, any>>(
+  request: Pick<Request, 'url'>,
+  schema: T,
+) {
+  type ParamsType = z.infer<T>
+  let url = new URL(request.url)
+  const result = getParamsInternal<ParamsType>(url.searchParams, schema)
+  if (!result.success) {
+    throw new Error(JSON.stringify(result.errors))
+  }
+  return result.data
+}
+
+export async function getFormDataOrFail<T extends ZodType<any, any, any>>(
+  request: Pick<Request, 'formData'>,
+  schema: T,
+) {
+  type ParamsType = z.infer<T>
+  let data = await request.formData()
+  const result = getParamsInternal<ParamsType>(data, schema)
+  if (!result.success) {
+    throw new Error(JSON.stringify(result.errors))
+  }
+  return result.data
+}
+
 export type InputPropType = {
   name: string
   type: string
