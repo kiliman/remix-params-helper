@@ -102,8 +102,9 @@ if (!result.success) {
 const { a, b, c, d, e } = result.data
 ```
 
-### ✨ New in v0.4.2 Added `*OrFail()` versions of the helpers that
+### ✨ New in v0.4.2 Added `*OrFail()` versions of the helpers
 
+The functions `getParamsOrFail()`, `getFormDataOrFail()`, `getSearchParamsOrFail()`
 will throw an `Error` when parsing fails. Since the helper can only
 return a valid result, the return value is always the data.
 
