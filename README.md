@@ -110,7 +110,7 @@ return a valid result, the return value is always the data.
 
 ```ts
 // returns valid data that can be destructured or Error is thrown
-const { a, b, c, d, e } = getFormDataOrFail(request, ParamsSchema)
+const { a, b, c, d, e } = await getFormDataOrFail(request, ParamsSchema)
 ```
 
 > NOTE: Although we provide these helpers, it is recommended that you
