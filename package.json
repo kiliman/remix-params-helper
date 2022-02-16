@@ -1,7 +1,7 @@
 {
   "name": "remix-params-helper",
-  "version": "0.4.1",
-  "description": "",
+  "version": "0.4.2",
+  "description": "This package makes it simple to use Zod with standard URLSearchParams and FormData which are typically used in Remix apps.",
   "browser": "/dist/helper.js",
   "main": "./dist/cjs/helper.js",
   "sideEffects": false,

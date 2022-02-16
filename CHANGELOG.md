@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.4.2
+
+- ✨ Add `getParamsOrFail`, `getSearchParamsOrFail`, and `getFormDataOrFail` helpers
+
 ## v0.4.1
 
 - 🐛 Remove `console.log` from parseParams

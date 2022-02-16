@@ -1,7 +1,9 @@
 # Remix Params Helper
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+
 [![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
+
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 This package makes it simple to use [Zod](https://github.com/colinhacks/zod) with
@@ -99,6 +101,20 @@ if (!result.success) {
 // these variables will be typed and valid
 const { a, b, c, d, e } = result.data
 ```
+
+### ✨ New in v0.4.2 Added `*OrFail()` versions of the helpers that
+
+will throw an `Error` when parsing fails. Since the helper can only
+return a valid result, the return value is always the data.
+
+```ts
+// returns valid data that can be destructured or Error is thrown
+const { a, b, c, d, e } = getFormDataOrFail(request, ParamsSchema)
+```
+
+> NOTE: Although we provide these helpers, it is recommended that you
+> return errors instead of throwing. Form validation is typically an
+> **_expected_** error. Throwing `Error` should be reserved for **_unexpected_** errors.
 
 ### ✨ New in v0.4.0 Support for nested objects and arrays
 
