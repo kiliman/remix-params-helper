@@ -330,4 +330,23 @@ describe('test nested objects and arrays', () => {
       expect(result.data.favoriteFoods?.length).toBe(4)
     }
   })
+  it('should ignore refine() method in schema', () => {
+    const schema = z.object({
+      name: z.string().refine(val => {
+        const values = Object.values(JSON.parse(val))
+        return (
+          values.length > 0 &&
+          values.some(v => typeof v === 'string' && v.length > 0)
+        )
+      }, 'You must fill in at least one language'),
+    })
+    const resultGood = getParams({ name: '{"en":"Game"}' }, schema)
+    expect(resultGood.success).toBe(true)
+
+    const resultBad = getParams({ name: '{"en":"","fr":""}' }, schema)
+    expect(resultBad.success).toBe(false)
+    expect(resultBad?.errors?.['name']).toBe(
+      'You must fill in at least one language',
+    )
+  })
 })

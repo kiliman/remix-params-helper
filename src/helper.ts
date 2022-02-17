@@ -3,6 +3,7 @@ import {
   ZodArray,
   ZodBoolean,
   ZodDefault,
+  ZodEffects,
   ZodEnum,
   ZodNativeEnum,
   ZodNumber,
@@ -210,6 +211,9 @@ function processDef(def: ZodTypeAny, o: any, key: string, value: string) {
     }
     processDef(def.element, o, key, value)
     // return here since recursive call will add to array
+    return
+  } else if (def instanceof ZodEffects) {
+    processDef(def._def.schema, o, key, value)
     return
   } else {
     throw new Error(`Unexpected type ${def._def.typeName} for key ${key}`)
