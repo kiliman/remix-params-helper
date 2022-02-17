@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.4.3
+
+- ✨ Add support for handling `.refine()` in Zod schema [#15](https://github.com/kiliman/remix-params-helper/issues/15)
+
 ## v0.4.2
 
 - ✨ Add `getParamsOrFail`, `getSearchParamsOrFail`, and `getFormDataOrFail` helpers
