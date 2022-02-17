@@ -54,6 +54,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "binajmen",
+      "name": "Benjamin",
+      "avatar_url": "https://avatars.githubusercontent.com/u/15611419?v=4",
+      "profile": "https://github.com/binajmen",
+      "contributions": [
+        "test"
+      ]
     }
   ],
   "contributorsPerLine": 7,
