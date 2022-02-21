@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.4.4
+
+- 🐛 Fix parsing of params when there schema contains `.refine()` [#16](https://github.com/kiliman/remix-params-helper/issues/16)
+
 ## v0.4.3
 
 - ✨ Add support for handling `.refine()` in Zod schema [#15](https://github.com/kiliman/remix-params-helper/issues/15)
