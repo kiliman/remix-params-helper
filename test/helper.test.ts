@@ -330,6 +330,8 @@ describe('test nested objects and arrays', () => {
       expect(result.data.favoriteFoods?.length).toBe(4)
     }
   })
+})
+describe('test refine schema', () => {
   it('should ignore refine() method in schema', () => {
     const schema = z.object({
       name: z.string().refine(val => {
@@ -348,5 +350,62 @@ describe('test nested objects and arrays', () => {
     expect(resultBad?.errors?.['name']).toBe(
       'You must fill in at least one language',
     )
+  })
+  it('should support number min/max in schema', () => {
+    const schema = z.object({
+      num: z.number().min(1).max(10),
+    })
+    const formData = new FormData()
+    formData.set('num', '1')
+    const resultGood = getParams(formData, schema)
+    expect(resultGood.success).toBe(true)
+    expect(resultGood.data?.num).toBe(1)
+    expect(typeof resultGood.data?.num).toBe('number')
+
+    formData.set('num', '20')
+    let resultBad = getParams(formData, schema)
+    expect(resultBad.success).toBe(false)
+    expect(resultBad.errors?.['num']).toBe(
+      'Value should be less than or equal to 10',
+    )
+
+    formData.set('num', 'abc')
+    resultBad = getParams(formData, schema)
+    expect(resultBad.success).toBe(false)
+    expect(resultBad.errors?.['num']).toBe('Expected number, received string')
+  })
+  it('should support number schema with refine', () => {
+    const schema = z
+      .object({
+        min: z.number(),
+        max: z.number(),
+      })
+      .refine(data => data.min < data.max, {
+        message: 'Min must be less than Max',
+        path: ['min'],
+      })
+    const formData = new FormData()
+    formData.set('min', '1')
+    formData.set('max', '2')
+    const resultGood = getParams(formData, schema)
+    expect(resultGood.success).toBe(true)
+    expect(resultGood.data?.min).toBe(1)
+    expect(resultGood.data?.max).toBe(2)
+    expect(typeof resultGood.data?.min).toBe('number')
+    expect(typeof resultGood.data?.max).toBe('number')
+
+    formData.set('min', '2')
+    formData.set('max', '1')
+    let resultBad = getParams(formData, schema)
+    console.log(resultBad)
+    expect(resultBad.success).toBe(false)
+    expect(resultBad.errors?.['min']).toBe('Min must be less than Max')
+
+    formData.set('min', 'abc')
+    formData.set('max', 'xyz')
+    resultBad = getParams(formData, schema)
+    expect(resultBad.success).toBe(false)
+    expect(resultBad.errors?.['min']).toBe('Expected number, received string')
+    expect(resultBad.errors?.['max']).toBe('Expected number, received string')
   })
 })

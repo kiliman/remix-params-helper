@@ -21,7 +21,20 @@ function isIterable(
 }
 
 function parseParams(o: any, schema: any, key: string, value: any) {
-  const shape = schema instanceof ZodObject ? schema.shape : schema
+  // find actual shape definition for this key
+  let shape = schema
+  while (shape instanceof ZodObject || shape instanceof ZodEffects) {
+    shape =
+      shape instanceof ZodObject
+        ? shape.shape
+        : shape instanceof ZodEffects
+        ? shape._def.schema
+        : null
+    if (shape === null) {
+      throw new Error(`Could not find shape for key ${key}`)
+    }
+  }
+
   if (key.includes('.')) {
     let [parentProp, ...rest] = key.split('.')
     o[parentProp] = o[parentProp] ?? {}
