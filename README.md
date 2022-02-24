@@ -1,7 +1,9 @@
 # Remix Params Helper
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+
 [![All Contributors](https://img.shields.io/badge/all_contributors-6-orange.svg?style=flat-square)](#contributors-)
+
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 This package makes it simple to use [Zod](https://github.com/colinhacks/zod) with
@@ -165,7 +167,14 @@ describe('test nested objects and arrays', () => {
 
 This helper allows you to set the props on your form `<input/>` based on your Zod schema.
 
-The function returns another function that you use to spread the properties on your input. It currently sets the `name`, `type`, and `required` props based on the key value you specify. If you need to override any of the props, just add it after you spread.
+The function returns another function that you use to spread the properties on your input. It currently sets the following props based on the key value you specify. If you need to override any of the props, just add it after you spread.
+
+- name
+- type: text, number, checkbox, date, email, url
+- required: not .optional()
+- min/max: number
+- minlength/maxlength: text
+- pattern: regex
 
 If the key doesn't exist in the schema, it will throw an error. This way if you rename any properties, it will force you to use the correct key.
 

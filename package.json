@@ -1,12 +1,12 @@
 {
   "name": "remix-params-helper",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "This package makes it simple to use Zod with standard URLSearchParams and FormData which are typically used in Remix apps.",
   "browser": "/dist/helper.js",
   "main": "./dist/cjs/helper.js",
   "sideEffects": false,
   "scripts": {
-    "build": "npm run build:esm && npm run build:cjs",
+    "build": "cp src/helper.ts example/app/utils && npm run build:esm && npm run build:cjs",
     "build:esm": "tsc --project tsconfig.json --module ESNext --outDir ./dist",
     "build:cjs": "tsc --project tsconfig.json --module CommonJS --outDir ./dist/cjs",
     "typecheck": "tsc --project tsconfig.json --noEmit",

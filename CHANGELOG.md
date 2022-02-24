@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.4.7
+
+- ✨ Add inputProps support for date, url, and email types
+- ✨ Add inputProps support for min/max
+- ✨ Add inputProps support for regex -> pattern
+
 ## v0.4.6
 
 - 🧹 Remove inadvertent console.log() statements

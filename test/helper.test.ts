@@ -460,7 +460,6 @@ describe('test refine schema', () => {
     formData.set('min', '2')
     formData.set('max', '1')
     let resultBad = getParams(formData, schema)
-    console.log(resultBad)
     expect(resultBad.success).toBe(false)
     expect(resultBad.errors?.['min']).toBe('Min must be less than Max')
 
