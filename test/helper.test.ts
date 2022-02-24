@@ -339,6 +339,18 @@ describe('test useFormInputProps', () => {
       maxlength: 20,
     })
   })
+  it('should support regex -> pattern props', () => {
+    const schema = z.object({
+      zip: z.string().regex(/^\d{5}$/),
+    })
+    const inputProps = useFormInputProps(schema)
+    expect(inputProps('zip')).toEqual({
+      type: 'text',
+      name: 'zip',
+      required: true,
+      pattern: '^\\d{5}$',
+    })
+  })
 })
 
 describe('test nested objects and arrays', () => {

@@ -184,6 +184,7 @@ export type InputPropType = {
   max?: number
   minlength?: number
   maxlength?: number
+  pattern?: string
 }
 
 export function useFormInputProps(schema: any, options: any = {}) {
@@ -241,7 +242,7 @@ function processDef(def: ZodTypeAny, o: any, key: string, value: string) {
 
 function getInputProps(name: string, def: ZodTypeAny): InputPropType {
   let type = 'text'
-  let min, max, minlength, maxlength
+  let min, max, minlength, maxlength, pattern
   if (def instanceof ZodString) {
     if (def.isEmail) {
       type = 'email'
@@ -250,6 +251,8 @@ function getInputProps(name: string, def: ZodTypeAny): InputPropType {
     }
     minlength = def.minLength ?? undefined
     maxlength = def.maxLength ?? undefined
+    const check: any = def._def.checks.find(c => c.kind === 'regex')
+    pattern = check ? check.regex.source : undefined
   } else if (def instanceof ZodNumber) {
     type = 'number'
     min = def.minValue ?? undefined
@@ -273,5 +276,6 @@ function getInputProps(name: string, def: ZodTypeAny): InputPropType {
   if (max) inputProps.max = max
   if (minlength && Number.isFinite(minlength)) inputProps.minlength = minlength
   if (maxlength && Number.isFinite(maxlength)) inputProps.maxlength = maxlength
+  if (pattern) inputProps.pattern = pattern
   return inputProps
 }
