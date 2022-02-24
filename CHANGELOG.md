@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.4.5
+
+- ✨ Add support for handling `.date()` in Zod schema
+
 ## v0.4.4
 
 - 🐛 Fix parsing of params when there schema contains `.refine()` [#16](https://github.com/kiliman/remix-params-helper/issues/16)
