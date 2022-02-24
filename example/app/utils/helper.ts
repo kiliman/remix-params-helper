@@ -244,7 +244,13 @@ function processDef(def: ZodTypeAny, o: any, key: string, value: string) {
 
 function defInputType(def: ZodTypeAny) {
   let type = 'text'
-  if (def instanceof ZodNumber) {
+  if (def instanceof ZodString) {
+    if (def.isEmail) {
+      type = 'email'
+    } else if (def.isURL) {
+      type = 'url'
+    }
+  } else if (def instanceof ZodNumber) {
     type = 'number'
   } else if (def instanceof ZodBoolean) {
     type = 'checkbox'

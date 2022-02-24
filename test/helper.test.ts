@@ -288,6 +288,29 @@ describe('test useFormInputProps', () => {
     const inputProps = useFormInputProps(mySchema)
     expect(() => inputProps('x')).toThrowError()
   })
+  it('should return correct input type for date and custom strings', () => {
+    const schema = z.object({
+      email: z.string().email(),
+      url: z.string().url(),
+      date: z.date(),
+    })
+    const inputProps = useFormInputProps(schema)
+    expect(inputProps('email')).toEqual({
+      type: 'email',
+      name: 'email',
+      required: true,
+    })
+    expect(inputProps('url')).toEqual({
+      type: 'url',
+      name: 'url',
+      required: true,
+    })
+    expect(inputProps('date')).toEqual({
+      type: 'date',
+      name: 'date',
+      required: true,
+    })
+  })
 })
 
 describe('test nested objects and arrays', () => {
