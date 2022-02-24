@@ -418,7 +418,6 @@ describe('test dates', () => {
     formData.set('date', '2020-01-01')
 
     const result = getParams(formData, schema)
-    console.log(result)
     expect(result.success).toBe(true)
     const { date } = result.data!
     expect(date instanceof Date).toBe(true)
@@ -432,7 +431,6 @@ describe('test dates', () => {
     formData.set('date', 'abc')
 
     const result = getParams(formData, schema)
-    console.log(result)
     expect(result.success).toBe(false)
     expect(result.errors?.['date']).toBe('Expected date, received string')
   })

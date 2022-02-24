@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.4.6
+
+- 🧹 Remove inadvertent console.log() statements
+
 ## v0.4.5
 
 - ✨ Add support for handling `.date()` in Zod schema
