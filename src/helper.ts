@@ -2,6 +2,7 @@ import {
   z,
   ZodArray,
   ZodBoolean,
+  ZodDate,
   ZodDefault,
   ZodEffects,
   ZodEnum,
@@ -208,6 +209,9 @@ function processDef(def: ZodTypeAny, o: any, key: string, value: string) {
   } else if (def instanceof ZodNumber) {
     const num = Number(value)
     parsedValue = isNaN(num) ? value : num
+  } else if (def instanceof ZodDate) {
+    const date = Date.parse(value)
+    parsedValue = isNaN(date) ? value : new Date(date)
   } else if (def instanceof ZodBoolean) {
     parsedValue =
       value === 'true' ? true : value === 'false' ? false : Boolean(value)
@@ -244,6 +248,8 @@ function defInputType(def: ZodTypeAny) {
     type = 'number'
   } else if (def instanceof ZodBoolean) {
     type = 'checkbox'
+  } else if (def instanceof ZodDate) {
+    type = 'date'
   } else if (def instanceof ZodArray) {
     type = defInputType(def.element)
   } else if (def instanceof ZodOptional) {

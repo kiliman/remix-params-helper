@@ -409,3 +409,31 @@ describe('test refine schema', () => {
     expect(resultBad.errors?.['max']).toBe('Expected number, received string')
   })
 })
+describe('test dates', () => {
+  it('should parse valid dates', () => {
+    const schema = z.object({
+      date: z.date(),
+    })
+    const formData = new FormData()
+    formData.set('date', '2020-01-01')
+
+    const result = getParams(formData, schema)
+    console.log(result)
+    expect(result.success).toBe(true)
+    const { date } = result.data!
+    expect(date instanceof Date).toBe(true)
+    expect(date.toISOString()).toBe('2020-01-01T00:00:00.000Z')
+  })
+  it('should fail invalid dates', () => {
+    const schema = z.object({
+      date: z.date(),
+    })
+    const formData = new FormData()
+    formData.set('date', 'abc')
+
+    const result = getParams(formData, schema)
+    console.log(result)
+    expect(result.success).toBe(false)
+    expect(result.errors?.['date']).toBe('Expected date, received string')
+  })
+})
