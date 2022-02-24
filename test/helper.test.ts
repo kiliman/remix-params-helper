@@ -267,17 +267,24 @@ it('should throw error', async () => {
 describe('test useFormInputProps', () => {
   it('should return correct form input props', () => {
     const inputProps = useFormInputProps(mySchema)
-    expect(inputProps('a')).toEqual({ type: 'text', name: 'a', required: true })
+    expect(inputProps('a')).toEqual({
+      type: 'text',
+      name: 'a',
+      required: true,
+      minlength: 5,
+      maxlength: 10,
+    })
     expect(inputProps('b')).toEqual({
       type: 'number',
       name: 'b',
+      required: true,
     })
     expect(inputProps('c')).toEqual({
       type: 'checkbox',
       name: 'c',
       required: true,
     })
-    expect(inputProps('d')).toEqual({ type: 'text', name: 'd' })
+    expect(inputProps('d')).toEqual({ type: 'text', name: 'd', required: true })
     expect(inputProps('e')).toEqual({
       type: 'number',
       name: 'e',
@@ -309,6 +316,27 @@ describe('test useFormInputProps', () => {
       type: 'date',
       name: 'date',
       required: true,
+    })
+  })
+  it('should support min/max props', () => {
+    const schema = z.object({
+      age: z.number().min(18).max(100),
+      password: z.string().min(8).max(20),
+    })
+    const inputProps = useFormInputProps(schema)
+    expect(inputProps('age')).toEqual({
+      type: 'number',
+      name: 'age',
+      required: true,
+      min: 18,
+      max: 100,
+    })
+    expect(inputProps('password')).toEqual({
+      type: 'text',
+      name: 'password',
+      required: true,
+      minlength: 8,
+      maxlength: 20,
     })
   })
 })

@@ -180,6 +180,10 @@ export type InputPropType = {
   name: string
   type: string
   required?: boolean
+  min?: number
+  max?: number
+  minlength?: number
+  maxlength?: number
 }
 
 export function useFormInputProps(schema: any, options: any = {}) {
@@ -191,14 +195,7 @@ export function useFormInputProps(schema: any, options: any = {}) {
     if (!def) {
       throw new Error(`no such key: ${key}`)
     }
-    let type = defInputType(def)
-    const required = !(def instanceof ZodOptional || def instanceof ZodArray)
-    let p: InputPropType = {
-      name: key,
-      type,
-    }
-    if (required) p.required = true
-    return p
+    return getInputProps(key, def)
   }
 }
 
@@ -242,24 +239,39 @@ function processDef(def: ZodTypeAny, o: any, key: string, value: string) {
   }
 }
 
-function defInputType(def: ZodTypeAny) {
+function getInputProps(name: string, def: ZodTypeAny): InputPropType {
   let type = 'text'
+  let min, max, minlength, maxlength
   if (def instanceof ZodString) {
     if (def.isEmail) {
       type = 'email'
     } else if (def.isURL) {
       type = 'url'
     }
+    minlength = def.minLength ?? undefined
+    maxlength = def.maxLength ?? undefined
   } else if (def instanceof ZodNumber) {
     type = 'number'
+    min = def.minValue ?? undefined
+    max = def.maxValue ?? undefined
   } else if (def instanceof ZodBoolean) {
     type = 'checkbox'
   } else if (def instanceof ZodDate) {
     type = 'date'
   } else if (def instanceof ZodArray) {
-    type = defInputType(def.element)
+    return getInputProps(name, def.element)
   } else if (def instanceof ZodOptional) {
-    type = defInputType(def.unwrap())
+    return getInputProps(name, def.unwrap())
   }
-  return type
+
+  let inputProps: InputPropType = {
+    name,
+    type,
+  }
+  if (!def.isOptional()) inputProps.required = true
+  if (min) inputProps.min = min
+  if (max) inputProps.max = max
+  if (minlength && Number.isFinite(minlength)) inputProps.minlength = minlength
+  if (maxlength && Number.isFinite(maxlength)) inputProps.maxlength = maxlength
+  return inputProps
 }
