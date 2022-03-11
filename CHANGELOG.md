@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.4.8
+
+- 🐛 Use correct property names: maxlength vs maxLength [#17](https://github.com/kiliman/remix-params-helper/pull/17)
+
 ## v0.4.7
 
 - ✨ Add inputProps support for date, url, and email types
