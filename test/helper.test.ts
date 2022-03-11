@@ -271,8 +271,8 @@ describe('test useFormInputProps', () => {
       type: 'text',
       name: 'a',
       required: true,
-      minlength: 5,
-      maxlength: 10,
+      minLength: 5,
+      maxLength: 10,
     })
     expect(inputProps('b')).toEqual({
       type: 'number',
@@ -335,8 +335,8 @@ describe('test useFormInputProps', () => {
       type: 'text',
       name: 'password',
       required: true,
-      minlength: 8,
-      maxlength: 20,
+      minLength: 8,
+      maxLength: 20,
     })
   })
   it('should support regex -> pattern props', () => {
