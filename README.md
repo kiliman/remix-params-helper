@@ -1,9 +1,7 @@
 # Remix Params Helper
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-
-[![All Contributors](https://img.shields.io/badge/all_contributors-6-orange.svg?style=flat-square)](#contributors-)
-
+[![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 This package makes it simple to use [Zod](https://github.com/colinhacks/zod) with
@@ -217,6 +215,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/raulrpearson"><img src="https://avatars.githubusercontent.com/u/23662058?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Raúl R Pearson</b></sub></a><br /><a href="https://github.com/Kiliman/remix-params-helper/commits?author=raulrpearson" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/cliffordfajardo"><img src="https://avatars.githubusercontent.com/u/6743796?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Clifford Fajardo </b></sub></a><br /><a href="https://github.com/Kiliman/remix-params-helper/commits?author=cliffordfajardo" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/binajmen"><img src="https://avatars.githubusercontent.com/u/15611419?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Benjamin</b></sub></a><br /><a href="https://github.com/Kiliman/remix-params-helper/commits?author=binajmen" title="Tests">⚠️</a> <a href="https://github.com/Kiliman/remix-params-helper/issues?q=author%3Abinajmen" title="Bug reports">🐛</a></td>
+    <td align="center"><a href="https://www.linkedin.com/in/dusty"><img src="https://avatars.githubusercontent.com/u/792?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Dusty Doris</b></sub></a><br /><a href="https://github.com/Kiliman/remix-params-helper/commits?author=dusty" title="Code">💻</a> <a href="https://github.com/Kiliman/remix-params-helper/issues?q=author%3Adusty" title="Bug reports">🐛</a></td>
   </tr>
 </table>
 
