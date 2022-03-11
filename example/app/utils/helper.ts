@@ -182,8 +182,8 @@ export type InputPropType = {
   required?: boolean
   min?: number
   max?: number
-  minlength?: number
-  maxlength?: number
+  minLength?: number
+  maxLength?: number
   pattern?: string
 }
 
@@ -274,8 +274,8 @@ function getInputProps(name: string, def: ZodTypeAny): InputPropType {
   if (!def.isOptional()) inputProps.required = true
   if (min) inputProps.min = min
   if (max) inputProps.max = max
-  if (minlength && Number.isFinite(minlength)) inputProps.minlength = minlength
-  if (maxlength && Number.isFinite(maxlength)) inputProps.maxlength = maxlength
+  if (minlength && Number.isFinite(minlength)) inputProps.minLength = minlength
+  if (maxlength && Number.isFinite(maxlength)) inputProps.maxLength = maxlength
   if (pattern) inputProps.pattern = pattern
   return inputProps
 }
