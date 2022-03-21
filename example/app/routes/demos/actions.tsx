@@ -2,14 +2,18 @@ import { useEffect, useRef } from 'react'
 import type { ActionFunction } from 'remix'
 import { Form, json, useActionData, redirect } from 'remix'
 import { z } from 'zod'
-import { getFormData, useFormInputProps } from '~/utils/helper'
+import {
+  getFormData,
+  useFormInputProps,
+  useZodValidation,
+} from '~/utils/helper'
 
 export function meta() {
   return { title: 'Actions Demo' }
 }
 
 const ActionSchema = z.object({
-  name: z.string(),
+  name: z.string().min(2, 'oups'),
   age: z.number(),
   number: z.number(),
   favorites: z.array(z.string()),
@@ -43,6 +47,7 @@ export default function ActionsDemo() {
   let actionMessage = JSON.stringify(useActionData(), null, 2)
   let focusRef = useRef<HTMLInputElement>(null)
   const inputProps = useFormInputProps(ActionSchema)
+  const { validation, validateField } = useZodValidation(ActionSchema)
   // This form works without JavaScript, but when we have JavaScript we can make
   // the experience better by selecting the input on wrong answers! Go ahead, disable
   // JavaScript in your browser and see what happens.
@@ -51,6 +56,8 @@ export default function ActionsDemo() {
       focusRef.current.select()
     }
   }, [actionMessage])
+
+  console.log(validation)
 
   return (
     <div className="remix__page">
@@ -65,16 +72,25 @@ export default function ActionsDemo() {
           <h3>Post an Action</h3>
           <label>
             <div>Name:</div>
-            <input ref={focusRef} {...inputProps('name')} />
+            <input
+              ref={focusRef}
+              {...inputProps('name')}
+              onBlur={validateField}
+            />
           </label>
           <label>
             <div>Age:</div>
-            <input {...inputProps('age')} />
+            <input {...inputProps('age')} onBlur={validateField} />
           </label>
           <label>
             <div>Should be a number:</div>
             {/* override type and required to test server validation */}
-            <input {...inputProps('number')} type="text" required={false} />
+            <input
+              {...inputProps('number')}
+              type="text"
+              required={false}
+              onBlur={validateField}
+            />
           </label>
           <label>
             <div>Favorites:</div>
@@ -84,6 +100,7 @@ export default function ActionsDemo() {
                   <label className="block" key={favorite}>
                     <input
                       {...inputProps('favorites')}
+                      onBlur={validateField}
                       type="checkbox" // override type from inputProps
                       required={false} // override required from inputProps
                       defaultValue={favorite}
@@ -96,26 +113,41 @@ export default function ActionsDemo() {
           </label>
           <label>
             <div>Accept (must be checked):</div>
-            <input {...inputProps('accept')} />
+            <input {...inputProps('accept')} onBlur={validateField} />
           </label>
           <label>
             <div>Remember Password:</div>
-            <input {...inputProps('remember')} />
+            <input {...inputProps('remember')} onBlur={validateField} />
           </label>
           <label>
             <div>Question:</div>
             <div style={{ display: 'flex', gap: '16px' }}>
               <label>
-                <input {...inputProps('answer')} type="radio" value="true" />{' '}
+                <input
+                  {...inputProps('answer')}
+                  onBlur={validateField}
+                  type="radio"
+                  value="true"
+                />{' '}
                 Yes
               </label>
               <label>
-                <input {...inputProps('answer')} type="radio" value="false" />{' '}
+                <input
+                  {...inputProps('answer')}
+                  onBlur={validateField}
+                  type="radio"
+                  value="false"
+                />{' '}
                 No
               </label>
               <label>
-                <input {...inputProps('answer')} type="radio" value="" /> Not
-                answered
+                <input
+                  {...inputProps('answer')}
+                  onBlur={validateField}
+                  type="radio"
+                  value=""
+                />{' '}
+                Not answered
               </label>
             </div>
           </label>
