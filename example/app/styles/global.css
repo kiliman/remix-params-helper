@@ -238,3 +238,8 @@ input:where([type='number']) {
   color: greenyellow;
   font-weight: bold;
 }
+
+.remix__form__warning {
+  color: yellow;
+  font-weight: bold;
+}

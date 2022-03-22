@@ -285,9 +285,9 @@ export default function ActionsDemo() {
           <div>
             <button disabled={!validation.success}>Submit</button>
             {!validation.success ? (
-              <p className="remix__form__error">Missing required fields</p>
+              <p className="remix__form__warning">Don't miss any fields 👮‍♀️</p>
             ) : (
-              <p className="remix__form__success">All good, let's go'</p>
+              <p className="remix__form__success">All good, let's go 🚀</p>
             )}
           </div>
           {data || errors ? (
