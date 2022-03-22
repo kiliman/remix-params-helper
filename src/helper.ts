@@ -72,27 +72,20 @@ function getParamsInternal<T>(
   schema: any,
   fieldName?: string,
 ):
-  | { success: true; data: T; errors: undefined; error: undefined }
+  | { success: true; data: T; errors: undefined }
   | {
       success: false
       data: undefined
-      errors: { [key: string]: string }
-      error: undefined
-    }
-  | { success: false; data: undefined; errors: undefined; error: string } {
-  console.log('params', params)
-  // @ts-ignore
+      errors: { [key: string]: string } | string
+    } {
   let o: any = {}
   let entries: [string, unknown][] = []
   if (isIterable(params)) {
-    console.log('iterable')
     entries = Array.from(params)
   } else if (isObject(params)) {
-    console.log('else')
     entries = Object.entries(params)
   } else {
     o = processDef(schema, o, fieldName!, params)
-    console.log('ooo', o, typeof schema)
   }
 
   for (let [key, value] of entries) {
@@ -111,16 +104,10 @@ function getParamsInternal<T>(
       success: true,
       data: result.data as T,
       errors: undefined,
-      error: undefined,
     }
   } else {
     let errors: any = {}
-    let error: any = undefined
-    const addError = (key: string | undefined, message: string) => {
-      if (!key) {
-        error = message
-        return
-      }
+    const addError = (key: string, message: string) => {
       if (!errors.hasOwnProperty(key)) {
         errors[key] = message
       } else {
@@ -131,7 +118,6 @@ function getParamsInternal<T>(
       }
     }
     for (let issue of result.error.issues) {
-      console.log('issue', issue)
       const { message, path, code, expected, received } = issue
       const [key, index] = path
       let value = o[key]
@@ -140,9 +126,14 @@ function getParamsInternal<T>(
         value = value[index]
         prop = `${key}[${index}]`
       }
+      // here we have no path so no key because we test a single field value
+      if (!key) {
+        errors = message as string
+        break
+      }
       addError(key, message)
     }
-    return { success: false, data: undefined, errors, error }
+    return { success: false, data: undefined, errors }
   }
 }
 
@@ -179,7 +170,6 @@ export async function getField<T extends SomeZodObject>(
 ) {
   const fieldSchema = schema.shape[name]
   type ParamsType = z.infer<typeof fieldSchema>
-  console.log('get', value, 'fieldSchema', fieldSchema, 'schema', schema)
   return getParamsInternal<ParamsType>(value, fieldSchema, name)
 }
 
@@ -281,7 +271,6 @@ function processDef(def: ZodTypeAny, o: any, key: string, value: string) {
   if (Array.isArray(o[key])) {
     o[key].push(parsedValue)
   } else {
-    console.log('end here')
     o[key] = parsedValue
     return parsedValue
   }
@@ -328,13 +317,13 @@ function getInputProps(name: string, def: ZodTypeAny): InputPropType {
 }
 
 type FieldState =
-  | { success: true; touched: true; error: undefined }
+  | { success: true; touched: true; errors: undefined }
   | {
       success: false
       touched: true
-      error: string
+      errors: string
     }
-  | { success: false; touched: false; error: undefined }
+  | { success: false; touched: false; errors: undefined }
 
 type ValidationState<T extends SomeZodObject> = {
   success: boolean
@@ -348,26 +337,24 @@ export function useZodValidation<T extends SomeZodObject>(schema: T) {
       state.field[fieldName as keyof z.infer<T>] = {
         success: false,
         touched: false,
-        error: undefined,
+        errors: undefined,
       }
     }
     return state
   })
 
-  // validField - on blur
+  // validField - use with on blur
   const validateField = async (e: React.FocusEvent<HTMLInputElement>) => {
     const fieldName = e.target.name
     const value = e.target.value
-    // const validationResult = await schema.shape[fieldName].safeParseAsync(value)
     const validationResult = await getField(fieldName, value, schema)
 
     setValidation(prevValidation => {
       if (validationResult.success) {
-        console.log(validationResult.data)
         const successState: FieldState = {
           success: true,
           touched: true,
-          error: undefined,
+          errors: undefined,
         }
 
         return {
@@ -379,12 +366,12 @@ export function useZodValidation<T extends SomeZodObject>(schema: T) {
         }
       }
 
-      console.log(fieldName)
-      console.log(validationResult.error)
+      console.log('DEBUG fieldName: ', fieldName)
+      console.log('DEBUG errors: ', validationResult.errors)
       const errorState: FieldState = {
         success: false,
         touched: true,
-        error: validationResult.error!,
+        errors: validationResult.errors as string,
       }
 
       return {
