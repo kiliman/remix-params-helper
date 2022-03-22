@@ -1,4 +1,5 @@
 import {
+  boolean,
   SomeZodObject,
   z,
   ZodArray,
@@ -20,14 +21,7 @@ import React from 'react'
 function isIterable(
   maybeIterable: unknown,
 ): maybeIterable is Iterable<unknown> {
-  return (
-    Symbol.iterator in Object(maybeIterable) &&
-    typeof maybeIterable !== 'string'
-  )
-}
-
-function isObject(maybeObject: unknown): maybeObject is Object {
-  return typeof maybeObject === 'object'
+  return Symbol.iterator in Object(maybeIterable)
 }
 
 function parseParams(o: any, schema: any, key: string, value: any) {
@@ -67,25 +61,20 @@ function parseParams(o: any, schema: any, key: string, value: any) {
   }
 }
 
-function getParamsInternal<T>(
+async function getParamsInternal<T>(
   params: URLSearchParams | FormData | Record<string, string | undefined>,
   schema: any,
-  fieldName?: string,
-):
+): Promise<
   | { success: true; data: T; errors: undefined }
-  | {
-      success: false
-      data: undefined
-      errors: { [key: string]: string } | string
-    } {
+  | { success: false; data: undefined; errors: { [key: string]: string } }
+> {
+  // @ts-ignore
   let o: any = {}
   let entries: [string, unknown][] = []
   if (isIterable(params)) {
     entries = Array.from(params)
-  } else if (isObject(params)) {
-    entries = Object.entries(params)
   } else {
-    o = processDef(schema, o, fieldName!, params)
+    entries = Object.entries(params)
   }
 
   for (let [key, value] of entries) {
@@ -98,7 +87,7 @@ function getParamsInternal<T>(
     parseParams(o, schema, key, value)
   }
 
-  const result = schema.safeParse(o)
+  const result = await schema.safeParseAsync(o)
   if (result.success) {
     return {
       success: true,
@@ -125,11 +114,6 @@ function getParamsInternal<T>(
       if (index !== undefined) {
         value = value[index]
         prop = `${key}[${index}]`
-      }
-      // here we have no path so no key because we test a single field value
-      if (!key) {
-        errors = message as string
-        break
       }
       addError(key, message)
     }
@@ -163,35 +147,35 @@ export async function getFormData<T extends ZodType<any, any, any>>(
   return getParamsInternal<ParamsType>(data, schema)
 }
 
-export async function getField<T extends SomeZodObject>(
+export async function getField<T extends ZodObject<any, any, any>>(
   name: string,
-  value: any,
+  formData: any,
   schema: T,
 ) {
-  const fieldSchema = schema.shape[name]
-  type ParamsType = z.infer<typeof fieldSchema>
-  return getParamsInternal<ParamsType>(value, fieldSchema, name)
+  type ParamsType = z.infer<T>
+
+  return getParamsInternal<ParamsType>(formData, schema.pick({ [name]: true }))
 }
 
-export function getParamsOrFail<T extends ZodType<any, any, any>>(
+export async function getParamsOrFail<T extends ZodType<any, any, any>>(
   params: URLSearchParams | FormData | Record<string, string | undefined>,
   schema: T,
 ) {
   type ParamsType = z.infer<T>
-  const result = getParamsInternal<ParamsType>(params, schema)
+  const result = await getParamsInternal<ParamsType>(params, schema)
   if (!result.success) {
     throw new Error(JSON.stringify(result.errors))
   }
   return result.data
 }
 
-export function getSearchParamsOrFail<T extends ZodType<any, any, any>>(
+export async function getSearchParamsOrFail<T extends ZodType<any, any, any>>(
   request: Pick<Request, 'url'>,
   schema: T,
 ) {
   type ParamsType = z.infer<T>
   let url = new URL(request.url)
-  const result = getParamsInternal<ParamsType>(url.searchParams, schema)
+  const result = await getParamsInternal<ParamsType>(url.searchParams, schema)
   if (!result.success) {
     throw new Error(JSON.stringify(result.errors))
   }
@@ -204,7 +188,7 @@ export async function getFormDataOrFail<T extends ZodType<any, any, any>>(
 ) {
   type ParamsType = z.infer<T>
   let data = await request.formData()
-  const result = getParamsInternal<ParamsType>(data, schema)
+  const result = await getParamsInternal<ParamsType>(data, schema)
   if (!result.success) {
     throw new Error(JSON.stringify(result.errors))
   }
@@ -316,73 +300,164 @@ function getInputProps(name: string, def: ZodTypeAny): InputPropType {
   return inputProps
 }
 
-type FieldState =
-  | { success: true; touched: true; errors: undefined }
-  | {
-      success: false
-      touched: true
-      errors: string
-    }
-  | { success: false; touched: false; errors: undefined }
+export type FormFieldState = {
+  success: boolean
+  touched: boolean
+  error: string | null
+  key: string
+  required: boolean
+  value?: any | null
+}
+
+export type ActionValidationErrors<T extends SomeZodObject> = Record<
+  keyof z.infer<T>,
+  string
+>
+
+type Field<T extends SomeZodObject> = Record<keyof z.infer<T>, FormFieldState>
 
 type ValidationState<T extends SomeZodObject> = {
   success: boolean
-  field: Record<keyof z.infer<T>, FieldState>
+  field: Field<T>
 }
 
-export function useZodValidation<T extends SomeZodObject>(schema: T) {
+export function useInputValidation<T extends SomeZodObject>(
+  schema: T,
+  actionErrors?: ActionValidationErrors<T>,
+) {
+  type StateType = ValidationState<T>
+
+  const formRef = React.useRef<HTMLFormElement>(null)
+
   const [validation, setValidation] = React.useState(() => {
-    const state = { success: false, field: {} } as ValidationState<T>
-    for (const fieldName in schema.shape) {
-      state.field[fieldName as keyof z.infer<T>] = {
-        success: false,
+    const state = { success: false, field: {} } as StateType
+    for (const key in schema.shape) {
+      const required = !schema.shape[key].isOptional()
+      state.field[key as keyof z.infer<T>] = {
+        success: !required,
         touched: false,
-        errors: undefined,
+        error: null,
+        required,
+        key,
+        value: null,
       }
     }
     return state
   })
 
-  // validField - use with on blur
-  const validateField = async (e: React.FocusEvent<HTMLInputElement>) => {
-    const fieldName = e.target.name
-    const value = e.target.value
-    const validationResult = await getField(fieldName, value, schema)
+  //listen to errors sent back by action
+  React.useEffect(() => {
+    if (!actionErrors) return
 
     setValidation(prevValidation => {
-      if (validationResult.success) {
-        const successState: FieldState = {
-          success: true,
-          touched: true,
-          errors: undefined,
+      // we don't want to use 'validation' state directly because its create an infinite loop
+      let serverState = { success: false, field: {} } as StateType
+      for (const key in schema.shape) {
+        const prevFieldState = prevValidation.field[key]
+        serverState.field[key as keyof z.infer<T>] = {
+          success: !Boolean(actionErrors[key]),
+          touched: Boolean(actionErrors[key]),
+          error: actionErrors[key],
+          required: prevFieldState.required,
+          key,
+          value: prevFieldState.value,
+        }
+      }
+      return serverState
+    })
+  }, [actionErrors])
+
+  const getSuccess = (field: Field<T>) => {
+    let success = true
+    for (const key in field) {
+      // required and success
+      if (field[key].required && !field[key].success) {
+        success = false
+      }
+      // not required but error
+      if (!field[key].success) {
+        success = false
+      }
+    }
+    return success
+  }
+
+  const validate = React.useCallback(
+    async (
+      e:
+        | React.ChangeEvent<HTMLInputElement>
+        | React.FocusEvent<HTMLInputElement>,
+    ) => {
+      const key = e.target.name
+      const value = e.target.value
+
+      if (!formRef.current) return
+
+      const formData = new FormData(formRef.current)
+
+      const validationResult = await getField(key, formData, schema).catch(
+        e => {
+          console.error(
+            `Maybe useInputValidation could not find shape for field "${key}"`,
+          )
+          throw e
+        },
+      )
+
+      setValidation((prevValidation): StateType => {
+        if (validationResult.success) {
+          const required = prevValidation.field[key].required
+          const incomingSuccessState: StateType = {
+            ...prevValidation,
+            field: {
+              ...prevValidation.field,
+              [key]: {
+                error: null,
+                success: true,
+                touched: true,
+                required,
+                key: key,
+                value,
+              },
+            },
+          }
+          return {
+            ...incomingSuccessState,
+            success: getSuccess(incomingSuccessState.field),
+          }
         }
 
         return {
           ...prevValidation,
+          success: false,
           field: {
             ...prevValidation.field,
-            [fieldName]: successState,
+            [key]: {
+              error: validationResult.errors[key],
+              success: false,
+              touched: true,
+              required: prevValidation.field[key].required,
+              key: key,
+              value,
+            },
           },
         }
-      }
+      })
+    },
+    [schema],
+  )
 
-      console.log('DEBUG fieldName: ', fieldName)
-      console.log('DEBUG errors: ', validationResult.errors)
-      const errorState: FieldState = {
-        success: false,
-        touched: true,
-        errors: validationResult.errors as string,
-      }
+  const reValidate = React.useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const key = e.target.name
+      const value = e.target.value
 
-      return {
-        ...prevValidation,
-        field: {
-          ...prevValidation.field,
-          [fieldName]: errorState,
-        },
+      if (validation.field[key].error || !value) {
+        return validate(e)
       }
-    })
-  }
+    },
+    [validate, validation],
+  )
 
-  return { validation, validateField }
+  return { validation, validate, reValidate, formRef }
 }

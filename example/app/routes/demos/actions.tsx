@@ -1,11 +1,12 @@
-import { useEffect, useRef } from 'react'
+import { MutableRefObject, useEffect, useRef } from 'react'
 import type { ActionFunction } from 'remix'
 import { Form, json, useActionData, redirect } from 'remix'
 import { z } from 'zod'
 import {
+  ActionValidationErrors,
+  FormFieldState,
   getFormData,
-  useFormInputProps,
-  useZodValidation,
+  useInputValidation,
 } from '~/utils/helper'
 
 export function meta() {
@@ -13,7 +14,8 @@ export function meta() {
 }
 
 const ActionSchema = z.object({
-  name: z.string().min(2, 'oups'),
+  name: z.string().min(2, 'Too short'),
+  cardNumber: z.number().optional(),
   age: z.number(),
   number: z.number(),
   favorites: z.array(z.string()),
@@ -24,40 +26,66 @@ const ActionSchema = z.object({
 
 type ActionType = z.infer<typeof ActionSchema>
 
+type ActionData = {
+  data: Record<string, any>
+  errors?: ActionValidationErrors<typeof ActionSchema>
+}
+
 // When your form sends a POST, the action is called on the server.
 // - https://remix.run/api/conventions#action
 // - https://remix.run/guides/data-updates
 export let action: ActionFunction = async ({ request }) => {
   const result = await getFormData(request, ActionSchema)
+
   // Typical action workflows start with validating the form data that just came
   // over the network. Clientside validation is fine, but you definitely need it
   // server side.  If there's a problem, return the the data and the component
   // can render it.
   if (!result.success) {
-    return json(result.errors, { status: 400 })
+    return json({ errors: result.errors }, { status: 400 })
   }
   // result.data is typed, so dereferrence it to get the actual typed properties
   const { name, age, number, favorites } = result.data
   // return the data to render as json
-  return json(result.data)
+  return json({ data: result.data })
+}
+
+const getFieldStyle = (state: FormFieldState, custom?: string | null) => {
+  if (custom) {
+    return custom
+  }
+  if (state.touched && state.required) {
+    if (state.error) {
+      return 'remix__form__error'
+    }
+    return 'remix__form__success'
+  }
+  if (state.touched) {
+    if (state.error) {
+      return 'remix__form__error'
+    } else if (state.success) {
+      return 'remix__form__success'
+    }
+  }
+
+  return 'remix__form__untouched'
 }
 
 export default function ActionsDemo() {
-  // https://remix.run/api/remix#useactiondata
-  let actionMessage = JSON.stringify(useActionData(), null, 2)
   let focusRef = useRef<HTMLInputElement>(null)
-  const inputProps = useFormInputProps(ActionSchema)
-  const { validation, validateField } = useZodValidation(ActionSchema)
-  // This form works without JavaScript, but when we have JavaScript we can make
-  // the experience better by selecting the input on wrong answers! Go ahead, disable
-  // JavaScript in your browser and see what happens.
+  let { data, errors } = (useActionData() || {}) as ActionData
+
+  const { validation, validate, reValidate, formRef } = useInputValidation(
+    ActionSchema,
+    errors,
+  )
+  const { field } = validation
+
   useEffect(() => {
-    if (actionMessage && focusRef.current) {
+    if (errors?.name && focusRef.current) {
       focusRef.current.select()
     }
-  }, [actionMessage])
-
-  console.log(validation)
+  }, [errors])
 
   return (
     <div className="remix__page">
@@ -65,44 +93,110 @@ export default function ActionsDemo() {
         <h2>Actions!</h2>
         <p>
           This form submission will send a post request that we handle in our
-          `action` export. Any route can export an action to handle data
-          mutations.
+          `action` export.
         </p>
-        <Form method="post" className="remix__form">
+        <Form method="post" className="remix__form" ref={formRef}>
           <h3>Post an Action</h3>
           <label>
-            <div>Name:</div>
+            <div>
+              <span className={getFieldStyle(field.name)}>
+                Name{field.name.required ? '*' : ''}:
+              </span>
+              <span className="remix__form__error">
+                {validation.field.name.error}
+              </span>
+            </div>
             <input
               ref={focusRef}
-              {...inputProps('name')}
-              onBlur={validateField}
-            />
-          </label>
-          <label>
-            <div>Age:</div>
-            <input {...inputProps('age')} onBlur={validateField} />
-          </label>
-          <label>
-            <div>Should be a number:</div>
-            {/* override type and required to test server validation */}
-            <input
-              {...inputProps('number')}
               type="text"
-              required={false}
-              onBlur={validateField}
+              name={field.name.key}
+              id="name"
+              autoComplete="off"
+              onBlur={validate}
+              onChange={reValidate}
             />
           </label>
           <label>
-            <div>Favorites:</div>
+            <div>
+              <span
+                className={getFieldStyle(
+                  field.cardNumber,
+                  typeof field.cardNumber.value === 'string' &&
+                    field.cardNumber.value.length === 0 &&
+                    field.cardNumber.success
+                    ? 'remix__form__untouched'
+                    : null,
+                )}
+              >
+                Card number 👮‍♀️{field.cardNumber.required ? '*' : ''}:
+              </span>
+              <span className="remix__form__error">
+                {validation.field.cardNumber.error}
+              </span>
+            </div>
+            <input
+              type="text"
+              name={field.cardNumber.key}
+              id="cardNumber"
+              autoComplete="off"
+              onBlur={validate}
+              onChange={reValidate}
+            />
+          </label>
+          <label>
+            <div>
+              <span className={getFieldStyle(field.age)}>
+                Age{field.age.required ? '*' : ''}:
+              </span>
+              <span className="remix__form__error">
+                {validation.field.age.error}
+              </span>
+            </div>
+            <input
+              name={field.age.key}
+              id="age"
+              type="number"
+              onBlur={validate}
+              onChange={reValidate}
+            />
+          </label>
+          <label>
+            <div>
+              <span className={getFieldStyle(field.number)}>
+                Should be a number{field.number.required ? '*' : ''}:
+              </span>
+              <span className="remix__form__error">
+                {validation.field.number.error}
+              </span>
+            </div>
+            <input
+              name={field.number.key}
+              type="text"
+              id="number"
+              autoComplete="off"
+              required={false}
+              onChange={reValidate}
+              onBlur={validate}
+            />
+          </label>
+          <label>
+            <div>
+              <span className={getFieldStyle(field.favorites)}>
+                Favorites{field.favorites.required ? '*' : ''}:
+              </span>
+              <span className="remix__form__error">
+                {validation.field.favorites.error}
+              </span>
+            </div>
             <div>
               {['Remix', 'Next.js', 'React', 'Prisma', 'GraphQL', 'Fly.io'].map(
                 favorite => (
                   <label className="block" key={favorite}>
                     <input
-                      {...inputProps('favorites')}
-                      onBlur={validateField}
-                      type="checkbox" // override type from inputProps
-                      required={false} // override required from inputProps
+                      name={field.favorites.key}
+                      id={favorite}
+                      onChange={validate}
+                      type="checkbox"
                       defaultValue={favorite}
                     />{' '}
                     {favorite}
@@ -112,20 +206,54 @@ export default function ActionsDemo() {
             </div>
           </label>
           <label>
-            <div>Accept (must be checked):</div>
-            <input {...inputProps('accept')} onBlur={validateField} />
+            <div>
+              <span className={getFieldStyle(field.accept)}>
+                Accept{field.accept.required ? '*' : ''}{' '}
+                {field.accept.success ? '✓' : '(must be checked)'}:
+              </span>
+              <span className="remix__form__error">
+                {validation.field.accept.error}
+              </span>
+            </div>
+            <input
+              name={field.accept.key}
+              id="accept"
+              type="checkbox"
+              onChange={validate}
+            />
           </label>
           <label>
-            <div>Remember Password:</div>
-            <input {...inputProps('remember')} onBlur={validateField} />
+            <div>
+              <span className={getFieldStyle(field.remember)}>
+                Remember Password{field.remember.required ? '*' : ''}{' '}
+                {field.remember.success ? '✓' : ''}:
+              </span>
+              <span className="remix__form__error">
+                {validation.field.remember.error}
+              </span>
+            </div>
+            <input
+              name={field.remember.key}
+              id="remember"
+              type="checkbox"
+              onChange={validate}
+            />
           </label>
           <label>
-            <div>Question:</div>
+            <div>
+              <span className={getFieldStyle(field.answer)}>
+                Question{field.answer.required ? '*' : ''} :
+              </span>
+              <span className="remix__form__error">
+                {validation.field.answer.error}
+              </span>
+            </div>
             <div style={{ display: 'flex', gap: '16px' }}>
               <label>
                 <input
-                  {...inputProps('answer')}
-                  onBlur={validateField}
+                  name={field.answer.key}
+                  onChange={validate}
+                  id="answer"
                   type="radio"
                   value="true"
                 />{' '}
@@ -133,8 +261,9 @@ export default function ActionsDemo() {
               </label>
               <label>
                 <input
-                  {...inputProps('answer')}
-                  onBlur={validateField}
+                  name={field.answer.key}
+                  onChange={validate}
+                  id="answer"
                   type="radio"
                   value="false"
                 />{' '}
@@ -142,8 +271,9 @@ export default function ActionsDemo() {
               </label>
               <label>
                 <input
-                  {...inputProps('answer')}
-                  onBlur={validateField}
+                  name={field.answer.key}
+                  onChange={validate}
+                  id="answer"
                   type="radio"
                   value=""
                 />{' '}
@@ -153,33 +283,18 @@ export default function ActionsDemo() {
           </label>
 
           <div>
-            <button>Submit</button>
+            <button disabled={!validation.success}>Submit</button>
+            {!validation.success ? (
+              <p className="remix__form__error">Missing required fields</p>
+            ) : (
+              <p className="remix__form__success">All good, let's go'</p>
+            )}
           </div>
-          {actionMessage ? <pre>{actionMessage}</pre> : null}
+          {data || errors ? (
+            <pre>{JSON.stringify({ data, errors }, null, 2)}</pre>
+          ) : null}
         </Form>
       </main>
-
-      <aside>
-        <h3>Additional Resources</h3>
-        <ul>
-          <li>
-            Guide:{' '}
-            <a href="https://remix.run/guides/data-writes">Data Writes</a>
-          </li>
-          <li>
-            API:{' '}
-            <a href="https://remix.run/api/conventions#action">
-              Route Action Export
-            </a>
-          </li>
-          <li>
-            API:{' '}
-            <a href="https://remix.run/api/remix#useactiondata">
-              <code>useActionData</code>
-            </a>
-          </li>
-        </ul>
-      </aside>
     </div>
   )
 }
