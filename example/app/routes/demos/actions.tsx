@@ -90,10 +90,10 @@ export default function ActionsDemo() {
   return (
     <div className="remix__page">
       <main>
-        <h2>Actions!</h2>
         <p>
           This form submission will send a post request that we handle in our
-          `action` export.
+          `action` export. But before that, client side validation based on the
+          same Zod schema ✌️
         </p>
         <Form method="post" className="remix__form" ref={formRef}>
           <h3>Post an Action</h3>
