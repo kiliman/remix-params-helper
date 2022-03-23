@@ -196,7 +196,7 @@ function Component() {
 }
 ```
 
-### `useInputValidation(schema, actionErrors)`
+### `useFormValidation(schema, actionErrors)`
 
 > Not dependent about Remix
 
@@ -228,7 +228,7 @@ It returns `validation`, `validate`, `reValidate` and `formRef`
 - `reValidate`: same as `validate` but triggers validation only if input was previously false
 - `formRef` ref to pass to the form (needed for magic thing)
 
-`useInputValidation` takes schema and `actionErrors` (optional) if you want to sync your form state with action error.
+`useFormValidation` takes schema and `actionErrors` (optional) if you want to sync your form state with action error.
 
 `actionErrors` comes from `getFormData()` return value
 
@@ -245,7 +245,7 @@ export let action: ActionFunction = async ({ request }) => {
 
 function Component() {
   let { data, errors } = (useActionData() || {}) as ActionData
-  const { validation, validate, reValidate, formRef } = useInputValidation(
+  const { validation, validate, reValidate, formRef } = useFormValidation(
     ActionSchema,
     errors,
   )

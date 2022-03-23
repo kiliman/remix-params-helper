@@ -6,7 +6,7 @@ import {
   ActionValidationErrors,
   FormFieldState,
   getFormData,
-  useInputValidation,
+  useFormValidation,
 } from '~/utils/helper'
 
 export function meta() {
@@ -75,7 +75,7 @@ export default function ActionsDemo() {
   let focusRef = useRef<HTMLInputElement>(null)
   let { data, errors } = (useActionData() || {}) as ActionData
 
-  const { validation, validate, reValidate, formRef } = useInputValidation(
+  const { validation, validate, reValidate, formRef } = useFormValidation(
     ActionSchema,
     errors,
   )

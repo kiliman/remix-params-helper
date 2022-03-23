@@ -321,7 +321,7 @@ type ValidationState<T extends SomeZodObject> = {
   field: Field<T>
 }
 
-export function useInputValidation<T extends SomeZodObject>(
+export function useFormValidation<T extends SomeZodObject>(
   schema: T,
   actionErrors?: ActionValidationErrors<T>,
 ) {
