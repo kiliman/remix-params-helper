@@ -640,6 +640,43 @@ describe('test useFormValidation', () => {
     })
   })
 
+  it('should validate form', async () => {
+    const { result } = renderHook(() => useFormValidation(mySchema))
+
+    const Form = () => (
+      <form ref={result.current.formRef}>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          onBlur={result.current.validate}
+          onChange={result.current.reValidate}
+        />
+        <input
+          type="checkbox"
+          id="Remix Run"
+          name="favorites"
+          defaultValue="Remix Run"
+          onChange={result.current.validate}
+        />
+      </form>
+    )
+
+    render(<Form />)
+
+    await waitFor(() => {
+      fireEvent.blur(screen.getByRole('textbox'), {
+        target: { value: 'Remix', name: 'name' },
+      })
+    })
+
+    await waitFor(() => {
+      fireEvent.click(screen.getByRole('checkbox'))
+    })
+
+    expect(result.current.validation.success).toBeTruthy()
+  })
+
   it('should sync with server errors', async () => {
     const errors = { favorites: 'Required', name: undefined }
     //@ts-ignore not all field errors are defined
