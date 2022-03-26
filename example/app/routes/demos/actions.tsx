@@ -87,8 +87,6 @@ export default function ActionsDemo() {
     }
   }, [errors])
 
-  console.log(validation)
-
   return (
     <div className="remix__page">
       <main>

@@ -1,11 +1,16 @@
 import { z } from 'zod'
+import { renderHook } from '@testing-library/react-hooks'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+
 import {
   getFormData,
   getParams,
   getParamsOrFail,
   getSearchParams,
   useFormInputProps,
+  useFormValidation,
 } from '../src/helper'
+import React from 'react'
 
 enum TestEnum {
   A = 'A',
@@ -495,5 +500,168 @@ describe('test dates', () => {
     const result = await getParams(formData, schema)
     expect(result.success).toBe(false)
     expect(result.errors?.['date']).toBe('Expected date, received string')
+  })
+})
+
+describe('test useFormValidation', () => {
+  const mySchema = z.object({
+    name: z.string().min(3, 'Too short').max(6, 'Too long'),
+    favorites: z.array(z.string()),
+  })
+
+  it('should return initial form validation state', () => {
+    const { result } = renderHook(() => useFormValidation(mySchema))
+    expect(result.current.validation).toEqual({
+      success: false,
+      field: {
+        name: {
+          success: false,
+          touched: false,
+          error: null,
+          required: true,
+          key: 'name',
+          value: null,
+        },
+        favorites: {
+          success: false,
+          touched: false,
+          error: null,
+          required: true,
+          key: 'favorites',
+          value: null,
+        },
+      },
+    })
+  })
+
+  it('should validate field', async () => {
+    const { result } = renderHook(() => useFormValidation(mySchema))
+
+    const Form = () => (
+      <form ref={result.current.formRef}>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          onBlur={result.current.validate}
+          onChange={() => {}}
+        />
+      </form>
+    )
+
+    render(<Form />)
+
+    await waitFor(() => {
+      fireEvent.blur(screen.getByRole('textbox'), {
+        target: { value: 'Remix', name: 'name' },
+      })
+    })
+
+    expect(result.current.validation.field.name).toEqual({
+      error: null,
+      success: true,
+      touched: true,
+      required: true,
+      key: 'name',
+      value: 'Remix',
+    })
+  })
+
+  it('should revalidate field with error', async () => {
+    const { result } = renderHook(() => useFormValidation(mySchema))
+
+    const Form = () => (
+      <form ref={result.current.formRef}>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          onBlur={result.current.validate}
+          onChange={result.current.reValidate}
+        />
+      </form>
+    )
+
+    result.current.validation.field.name = {
+      error: 'Too short',
+      success: false,
+      touched: true,
+      required: true,
+      key: 'name',
+      value: null,
+    }
+
+    render(<Form />)
+
+    await waitFor(() => {
+      fireEvent.change(screen.getByRole('textbox'), {
+        target: { value: 'Remix', name: 'name' },
+      })
+    })
+
+    expect(result.current.validation.field.name).toEqual({
+      error: null,
+      success: true,
+      touched: true,
+      required: true,
+      key: 'name',
+      value: 'Remix',
+    })
+  })
+
+  it('should validate checkbox field', async () => {
+    const { result } = renderHook(() => useFormValidation(mySchema))
+
+    const Form = () => (
+      <form ref={result.current.formRef}>
+        <input
+          type="checkbox"
+          id="Remix Run"
+          name="favorites"
+          defaultValue="Remix Run"
+          onChange={result.current.validate}
+        />
+      </form>
+    )
+
+    render(<Form />)
+
+    await waitFor(() => {
+      fireEvent.click(screen.getByRole('checkbox'))
+    })
+
+    expect(result.current.validation.field.favorites).toEqual({
+      error: null,
+      success: true,
+      touched: true,
+      required: true,
+      key: 'favorites',
+      value: ['Remix Run'],
+    })
+  })
+
+  it('should sync with server errors', async () => {
+    const errors = { favorites: 'Required', name: undefined }
+    //@ts-ignore not all field errors are defined
+    const { result } = renderHook(() => useFormValidation(mySchema, errors))
+
+    expect(result.current.validation.field).toEqual({
+      name: {
+        success: true,
+        touched: false,
+        error: undefined,
+        required: true,
+        key: 'name',
+        value: null,
+      },
+      favorites: {
+        success: false,
+        touched: true,
+        error: 'Required',
+        required: true,
+        key: 'favorites',
+        value: null,
+      },
+    })
   })
 })

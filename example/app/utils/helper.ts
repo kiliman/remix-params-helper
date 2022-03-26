@@ -383,41 +383,41 @@ export function useFormValidation<T extends SomeZodObject>(
   }
 
   const validate = React.useCallback(
-    async (
-      e:
-        | React.ChangeEvent<HTMLInputElement>
-        | React.FocusEvent<HTMLInputElement>,
-    ) => {
-      const key = e.target.name
+    async (e: { target: { name: string; value: any } }) => {
+      const fieldName = e.target.name
       const value = e.target.value
 
       if (!formRef.current) return
 
-      const formData = new FormData(formRef.current)
+      // const formData = new FormData(formRef.current)
+      const formData = new FormData()
+      formData.append(fieldName, `[${value}]`)
 
-      const validationResult = await getField(key, formData, schema).catch(
-        e => {
-          console.error(
-            `Maybe useInputValidation could not find shape for field "${key}"`,
-          )
-          throw e
-        },
-      )
+      const validationResult = await getField(
+        fieldName,
+        formData,
+        schema,
+      ).catch(e => {
+        console.error(
+          `Maybe useInputValidation could not find shape for field "${fieldName}"`,
+        )
+        throw e
+      })
 
       setValidation((prevValidation): StateType => {
         if (validationResult.success) {
-          const required = prevValidation.field[key].required
+          const required = prevValidation.field[fieldName].required
           const incomingSuccessState: StateType = {
             ...prevValidation,
             field: {
               ...prevValidation.field,
-              [key]: {
+              [fieldName]: {
                 error: null,
                 success: true,
                 touched: true,
                 required,
-                key: key,
-                value,
+                key: fieldName,
+                value: validationResult.data[fieldName],
               },
             },
           }
@@ -432,13 +432,13 @@ export function useFormValidation<T extends SomeZodObject>(
           success: false,
           field: {
             ...prevValidation.field,
-            [key]: {
-              error: validationResult.errors[key],
+            [fieldName]: {
+              error: validationResult.errors[fieldName],
               success: false,
               touched: true,
-              required: prevValidation.field[key].required,
-              key: key,
-              value,
+              required: prevValidation.field[fieldName].required,
+              key: fieldName,
+              value: null,
             },
           },
         }
@@ -448,11 +448,11 @@ export function useFormValidation<T extends SomeZodObject>(
   )
 
   const reValidate = React.useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const key = e.target.name
+    (e: { target: { value: any; name: string } }) => {
+      const fieldName = e.target.name
       const value = e.target.value
 
-      if (validation.field[key].error || !value) {
+      if (validation.field[fieldName].error || !value) {
         return validate(e)
       }
     },
