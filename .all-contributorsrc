@@ -74,6 +74,15 @@
         "code",
         "bug"
       ]
+    },
+    {
+      "login": "rphlmr",
+      "name": "Raphaël Moreau",
+      "avatar_url": "https://avatars.githubusercontent.com/u/20722140?v=4",
+      "profile": "https://github.com/rphlmr",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

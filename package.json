@@ -34,7 +34,8 @@
     "zod",
     "URLSearchParams",
     "FormData",
-    "params"
+    "params",
+    "hook"
   ],
   "license": "MIT",
   "files": [
@@ -45,7 +46,11 @@
     "@babel/core": "^7.16.0",
     "@babel/preset-env": "^7.16.4",
     "@babel/preset-typescript": "^7.16.0",
+    "@testing-library/dom": "^8.11.4",
+    "@testing-library/react": "^12.1.4",
+    "@testing-library/react-hooks": "^7.0.2",
     "@types/jest": "^27.0.3",
+    "@types/react": "^17.0.41",
     "all-contributors-cli": "^6.20.0",
     "babel-jest": "^27.4.2",
     "formdata-polyfill": "^4.0.10",
@@ -56,7 +61,9 @@
     "typescript": "^4.5.2"
   },
   "peerDependencies": {
-    "zod": "^3.11.6"
+    "react": ">=16.8",
+    "react-dom": ">=16.8",
+    "zod": "^3.14.2"
   },
   "jest": {
     "preset": "ts-jest/presets/default-esm",

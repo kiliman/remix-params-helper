@@ -1,11 +1,16 @@
 import { z } from 'zod'
+import { renderHook } from '@testing-library/react-hooks'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+
 import {
   getFormData,
   getParams,
   getParamsOrFail,
   getSearchParams,
   useFormInputProps,
+  useFormValidation,
 } from '../src/helper'
+import React from 'react'
 
 enum TestEnum {
   A = 'A',
@@ -37,11 +42,11 @@ const mySchema = z.object({
 })
 
 describe('test getParams', () => {
-  it('should return data from params', () => {
+  it('should return data from params', async () => {
     const params = { a: 'a value' }
     const schema = z.object({ a: z.string() })
 
-    const { success, data, errors } = getParams(params, schema)
+    const { success, data, errors } = await getParams(params, schema)
 
     expect(success).toBe(true)
     expect(errors).toBeUndefined()
@@ -50,7 +55,7 @@ describe('test getParams', () => {
     })
   })
 
-  it('should return data from URLSearchParams', () => {
+  it('should return data from URLSearchParams', async () => {
     const params = new URLSearchParams()
     params.set('a', 'abcdef')
     params.append('b', '1')
@@ -63,7 +68,7 @@ describe('test getParams', () => {
     params.set('zodEnum', 'A')
     params.set('nativeEnum', 'B')
 
-    const { success, data, errors } = getParams(params, mySchema)
+    const { success, data, errors } = await getParams(params, mySchema)
 
     expect(success).toBe(true)
     expect(errors).toBeUndefined()
@@ -80,7 +85,7 @@ describe('test getParams', () => {
     })
   })
 
-  it('should return error', () => {
+  it('should return error', async () => {
     const params = new URLSearchParams()
     params.set('a', '') // empty param should be inferred as if it was undefined
     params.append('b', '1')
@@ -91,7 +96,7 @@ describe('test getParams', () => {
     params.set('zodEnum', 'C')
     params.set('nativeEnum', 'D')
 
-    const { success, errors } = getParams(params, mySchema)
+    const { success, errors } = await getParams(params, mySchema)
 
     expect(success).toBe(false)
     expect(errors?.['a']).toEqual(`a is required`)
@@ -99,10 +104,10 @@ describe('test getParams', () => {
     expect(errors?.['c']).toEqual(`c is required`)
     expect(errors?.['e']).toEqual('Expected number, received string')
     expect(errors?.['zodEnum']).toEqual(
-      "Invalid enum value. Expected 'A' | 'B', received 'C'",
+      "Invalid enum value. Expected 'A' | 'B'",
     )
     expect(errors?.['nativeEnum']).toEqual(
-      "Invalid enum value. Expected 'A' | 'B', received 'D'",
+      "Invalid enum value. Expected 'A' | 'B'",
     )
     expect(errors?.['email']).toEqual([
       'Invalid email',
@@ -112,7 +117,7 @@ describe('test getParams', () => {
 })
 
 describe('test getSearchParamsFromRequest', () => {
-  it('should return data from Request', () => {
+  it('should return data from Request', async () => {
     const url = new URL('http://localhost')
     url.searchParams.set('a', 'abcdef')
     url.searchParams.append('b', '1')
@@ -125,7 +130,7 @@ describe('test getSearchParamsFromRequest', () => {
     url.searchParams.set('zodEnum', 'A')
     url.searchParams.set('nativeEnum', 'B')
 
-    const { success, data, errors } = getSearchParams(
+    const { success, data, errors } = await getSearchParams(
       { url: url.toString() },
       mySchema,
     )
@@ -145,7 +150,7 @@ describe('test getSearchParamsFromRequest', () => {
     })
   })
 
-  it('should return error', () => {
+  it('should return error', async () => {
     const url = new URL('http://localhost')
     url.searchParams.set('a', '') // empty param should be inferred as if it was undefined
     url.searchParams.append('b', '1')
@@ -156,7 +161,7 @@ describe('test getSearchParamsFromRequest', () => {
     url.searchParams.set('zodEnum', 'C')
     url.searchParams.set('nativeEnum', 'D')
 
-    const { success, data, errors } = getSearchParams(
+    const { success, data, errors } = await getSearchParams(
       { url: url.toString() },
       mySchema,
     )
@@ -167,10 +172,10 @@ describe('test getSearchParamsFromRequest', () => {
     expect(errors?.['c']).toEqual(`c is required`)
     expect(errors?.['e']).toEqual('Expected number, received string')
     expect(errors?.['zodEnum']).toEqual(
-      "Invalid enum value. Expected 'A' | 'B', received 'C'",
+      "Invalid enum value. Expected 'A' | 'B'",
     )
     expect(errors?.['nativeEnum']).toEqual(
-      "Invalid enum value. Expected 'A' | 'B', received 'D'",
+      "Invalid enum value. Expected 'A' | 'B'",
     )
     expect(errors?.['email']).toEqual([
       'Invalid email',
@@ -236,10 +241,10 @@ describe('test getFormDataFromRequest', () => {
     expect(errors?.['c']).toEqual(`c is required`)
     expect(errors?.['e']).toEqual('Expected number, received string')
     expect(errors?.['zodEnum']).toEqual(
-      "Invalid enum value. Expected 'A' | 'B', received 'C'",
+      "Invalid enum value. Expected 'A' | 'B'",
     )
     expect(errors?.['nativeEnum']).toEqual(
-      "Invalid enum value. Expected 'A' | 'B', received 'D'",
+      "Invalid enum value. Expected 'A' | 'B'",
     )
     expect(errors?.['email']).toEqual([
       'Invalid email',
@@ -354,7 +359,7 @@ describe('test useFormInputProps', () => {
 })
 
 describe('test nested objects and arrays', () => {
-  it('should validate nested object', () => {
+  it('should validate nested object', async () => {
     const mySchema = z.object({
       name: z.string(),
       address: z.object({
@@ -370,13 +375,13 @@ describe('test nested objects and arrays', () => {
     formData.set('address.city', 'Anytown')
     formData.set('address.state', 'US')
     formData.set('address.zip', '12345')
-    const result = getParams(formData, mySchema)
+    const result = await getParams(formData, mySchema)
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data.address.street).toBe('123 Main St')
     }
   })
-  it('should validate arrays with [] syntax', () => {
+  it('should validate arrays with [] syntax', async () => {
     const mySchema = z.object({
       name: z.string(),
       favoriteFoods: z.array(z.string()),
@@ -387,7 +392,7 @@ describe('test nested objects and arrays', () => {
     formData.append('favoriteFoods[]', 'Tacos')
     formData.append('favoriteFoods[]', 'Hamburgers')
     formData.append('favoriteFoods[]', 'Sushi')
-    const result = getParams(formData, mySchema)
+    const result = await getParams(formData, mySchema)
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data.favoriteFoods?.length).toBe(4)
@@ -395,7 +400,7 @@ describe('test nested objects and arrays', () => {
   })
 })
 describe('test refine schema', () => {
-  it('should ignore refine() method in schema', () => {
+  it('should ignore refine() method in schema', async () => {
     const schema = z.object({
       name: z.string().refine(val => {
         const values = Object.values(JSON.parse(val))
@@ -405,39 +410,39 @@ describe('test refine schema', () => {
         )
       }, 'You must fill in at least one language'),
     })
-    const resultGood = getParams({ name: '{"en":"Game"}' }, schema)
+    const resultGood = await getParams({ name: '{"en":"Game"}' }, schema)
     expect(resultGood.success).toBe(true)
 
-    const resultBad = getParams({ name: '{"en":"","fr":""}' }, schema)
+    const resultBad = await getParams({ name: '{"en":"","fr":""}' }, schema)
     expect(resultBad.success).toBe(false)
     expect(resultBad?.errors?.['name']).toBe(
       'You must fill in at least one language',
     )
   })
-  it('should support number min/max in schema', () => {
+  it('should support number min/max in schema', async () => {
     const schema = z.object({
       num: z.number().min(1).max(10),
     })
     const formData = new FormData()
     formData.set('num', '1')
-    const resultGood = getParams(formData, schema)
+    const resultGood = await getParams(formData, schema)
     expect(resultGood.success).toBe(true)
     expect(resultGood.data?.num).toBe(1)
     expect(typeof resultGood.data?.num).toBe('number')
 
     formData.set('num', '20')
-    let resultBad = getParams(formData, schema)
+    let resultBad = await getParams(formData, schema)
     expect(resultBad.success).toBe(false)
     expect(resultBad.errors?.['num']).toBe(
-      'Value should be less than or equal to 10',
+      'Number must be less than or equal to 10',
     )
 
     formData.set('num', 'abc')
-    resultBad = getParams(formData, schema)
+    resultBad = await getParams(formData, schema)
     expect(resultBad.success).toBe(false)
     expect(resultBad.errors?.['num']).toBe('Expected number, received string')
   })
-  it('should support number schema with refine', () => {
+  it('should support number schema with refine', async () => {
     const schema = z
       .object({
         min: z.number(),
@@ -450,7 +455,7 @@ describe('test refine schema', () => {
     const formData = new FormData()
     formData.set('min', '1')
     formData.set('max', '2')
-    const resultGood = getParams(formData, schema)
+    const resultGood = await getParams(formData, schema)
     expect(resultGood.success).toBe(true)
     expect(resultGood.data?.min).toBe(1)
     expect(resultGood.data?.max).toBe(2)
@@ -459,41 +464,241 @@ describe('test refine schema', () => {
 
     formData.set('min', '2')
     formData.set('max', '1')
-    let resultBad = getParams(formData, schema)
+    let resultBad = await getParams(formData, schema)
     expect(resultBad.success).toBe(false)
     expect(resultBad.errors?.['min']).toBe('Min must be less than Max')
 
     formData.set('min', 'abc')
     formData.set('max', 'xyz')
-    resultBad = getParams(formData, schema)
+    resultBad = await getParams(formData, schema)
     expect(resultBad.success).toBe(false)
     expect(resultBad.errors?.['min']).toBe('Expected number, received string')
     expect(resultBad.errors?.['max']).toBe('Expected number, received string')
   })
 })
 describe('test dates', () => {
-  it('should parse valid dates', () => {
+  it('should parse valid dates', async () => {
     const schema = z.object({
       date: z.date(),
     })
     const formData = new FormData()
     formData.set('date', '2020-01-01')
 
-    const result = getParams(formData, schema)
+    const result = await getParams(formData, schema)
     expect(result.success).toBe(true)
     const { date } = result.data!
     expect(date instanceof Date).toBe(true)
     expect(date.toISOString()).toBe('2020-01-01T00:00:00.000Z')
   })
-  it('should fail invalid dates', () => {
+  it('should fail invalid dates', async () => {
     const schema = z.object({
       date: z.date(),
     })
     const formData = new FormData()
     formData.set('date', 'abc')
 
-    const result = getParams(formData, schema)
+    const result = await getParams(formData, schema)
     expect(result.success).toBe(false)
     expect(result.errors?.['date']).toBe('Expected date, received string')
+  })
+})
+
+describe('test useFormValidation', () => {
+  const mySchema = z.object({
+    name: z.string().min(3, 'Too short').max(6, 'Too long'),
+    favorites: z.array(z.string()),
+  })
+
+  it('should return initial form validation state', () => {
+    const { result } = renderHook(() => useFormValidation(mySchema))
+    expect(result.current.validation).toEqual({
+      success: false,
+      field: {
+        name: {
+          success: false,
+          touched: false,
+          error: null,
+          required: true,
+          key: 'name',
+          value: null,
+        },
+        favorites: {
+          success: false,
+          touched: false,
+          error: null,
+          required: true,
+          key: 'favorites',
+          value: null,
+        },
+      },
+    })
+  })
+
+  it('should validate field', async () => {
+    const { result } = renderHook(() => useFormValidation(mySchema))
+
+    const Form = () => (
+      <form ref={result.current.formRef}>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          onBlur={result.current.validate}
+          onChange={() => {}}
+        />
+      </form>
+    )
+
+    render(<Form />)
+
+    await waitFor(() => {
+      fireEvent.blur(screen.getByRole('textbox'), {
+        target: { value: 'Remix', name: 'name' },
+      })
+    })
+
+    expect(result.current.validation.field.name).toEqual({
+      error: null,
+      success: true,
+      touched: true,
+      required: true,
+      key: 'name',
+      value: 'Remix',
+    })
+  })
+
+  it('should revalidate field with error', async () => {
+    const { result } = renderHook(() => useFormValidation(mySchema))
+
+    const Form = () => (
+      <form ref={result.current.formRef}>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          onBlur={result.current.validate}
+          onChange={result.current.reValidate}
+        />
+      </form>
+    )
+
+    result.current.validation.field.name = {
+      error: 'Too short',
+      success: false,
+      touched: true,
+      required: true,
+      key: 'name',
+      value: null,
+    }
+
+    render(<Form />)
+
+    await waitFor(() => {
+      fireEvent.change(screen.getByRole('textbox'), {
+        target: { value: 'Remix', name: 'name' },
+      })
+    })
+
+    expect(result.current.validation.field.name).toEqual({
+      error: null,
+      success: true,
+      touched: true,
+      required: true,
+      key: 'name',
+      value: 'Remix',
+    })
+  })
+
+  it('should validate checkbox field', async () => {
+    const { result } = renderHook(() => useFormValidation(mySchema))
+
+    const Form = () => (
+      <form ref={result.current.formRef}>
+        <input
+          type="checkbox"
+          id="Remix Run"
+          name="favorites"
+          defaultValue="Remix Run"
+          onChange={result.current.validate}
+        />
+      </form>
+    )
+
+    render(<Form />)
+
+    await waitFor(() => {
+      fireEvent.click(screen.getByRole('checkbox'))
+    })
+
+    expect(result.current.validation.field.favorites).toEqual({
+      error: null,
+      success: true,
+      touched: true,
+      required: true,
+      key: 'favorites',
+      value: ['Remix Run'],
+    })
+  })
+
+  it('should validate form', async () => {
+    const { result } = renderHook(() => useFormValidation(mySchema))
+
+    const Form = () => (
+      <form ref={result.current.formRef}>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          onBlur={result.current.validate}
+          onChange={result.current.reValidate}
+        />
+        <input
+          type="checkbox"
+          id="Remix Run"
+          name="favorites"
+          defaultValue="Remix Run"
+          onChange={result.current.validate}
+        />
+      </form>
+    )
+
+    render(<Form />)
+
+    await waitFor(() => {
+      fireEvent.blur(screen.getByRole('textbox'), {
+        target: { value: 'Remix', name: 'name' },
+      })
+    })
+
+    await waitFor(() => {
+      fireEvent.click(screen.getByRole('checkbox'))
+    })
+
+    expect(result.current.validation.success).toBeTruthy()
+  })
+
+  it('should sync with server errors', async () => {
+    const errors = { favorites: 'Required', name: undefined }
+    //@ts-ignore not all field errors are defined
+    const { result } = renderHook(() => useFormValidation(mySchema, errors))
+
+    expect(result.current.validation.field).toEqual({
+      name: {
+        success: true,
+        touched: false,
+        error: undefined,
+        required: true,
+        key: 'name',
+        value: null,
+      },
+      favorites: {
+        success: false,
+        touched: true,
+        error: 'Required',
+        required: true,
+        key: 'favorites',
+        value: null,
+      },
+    })
   })
 })

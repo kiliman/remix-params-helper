@@ -222,3 +222,24 @@ input:where([type='number']) {
   margin-top: 0;
   margin-bottom: 0;
 }
+
+.remix__form__error {
+  color: red;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.remix__form__untouched {
+  color: white;
+  font-weight: bold;
+}
+
+.remix__form__success {
+  color: greenyellow;
+  font-weight: bold;
+}
+
+.remix__form__warning {
+  color: yellow;
+  font-weight: bold;
+}
