@@ -55,6 +55,9 @@
     "ts-node": "^10.4.0",
     "typescript": "^4.5.2"
   },
+  "dependencies": {
+    "type-fest": "^2.12.2"
+  },
   "peerDependencies": {
     "zod": "^3.11.6"
   },

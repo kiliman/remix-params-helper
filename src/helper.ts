@@ -1,3 +1,4 @@
+import { Get } from 'type-fest'
 import {
   z,
   ZodArray,
@@ -10,6 +11,7 @@ import {
   ZodNumber,
   ZodObject,
   ZodOptional,
+  ZodRawShape,
   ZodString,
   ZodType,
   ZodTypeAny,
@@ -187,16 +189,35 @@ export type InputPropType = {
   pattern?: string
 }
 
-export function useFormInputProps(schema: any, options: any = {}) {
-  const shape = schema.shape
-  const defaultOptions = options
-  return function props(key: string, options: any = {}) {
-    options = { ...defaultOptions, ...options }
-    const def = shape[key]
-    if (!def) {
-      throw new Error(`no such key: ${key}`)
-    }
-    return getInputProps(key, def)
+export function useFormInputProps<
+  Schema extends ZodObject<S>,
+  S extends ZodRawShape,
+>(schema: Schema) {
+  type SchemaOutput = ReturnType<Schema['parse']>
+  return function props<PathString extends string>(
+    pathString: PathString,
+  ): unknown extends Get<SchemaOutput, PathString> ? never : InputPropType {
+    const pathArr = pathString.split(/\W+/g)
+
+    const def = pathArr.reduce((inShape, key, idx, arr) => {
+      const outDef = inShape[key]
+
+      if (!outDef) {
+        throw new Error(`no such path: ${pathString}`)
+      }
+
+      if (idx === arr.length - 1) {
+        return outDef
+      }
+
+      return outDef._def.typeName === 'ZodObject'
+        ? outDef._def.shape()
+        : outDef._def.typeName === 'ZodArray'
+        ? outDef._def.type._def.shape()
+        : {}
+    }, schema.shape)
+
+    return getInputProps(pathString, def as any) as any
   }
 }
 
