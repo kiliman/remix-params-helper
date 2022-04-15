@@ -6,6 +6,7 @@ import {
   ZodDefault,
   ZodEffects,
   ZodEnum,
+  ZodLiteral,
   ZodNativeEnum,
   ZodNumber,
   ZodObject,
@@ -202,7 +203,7 @@ export function useFormInputProps(schema: any, options: any = {}) {
 
 function processDef(def: ZodTypeAny, o: any, key: string, value: string) {
   let parsedValue: any
-  if (def instanceof ZodString) {
+  if (def instanceof ZodString || def instanceof ZodLiteral) {
     parsedValue = value
   } else if (def instanceof ZodNumber) {
     const num = Number(value)
