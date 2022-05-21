@@ -524,3 +524,34 @@ describe('literal values', () => {
     )
   })
 })
+
+describe('array values', () => {
+  it('should create array if key has []', () => {
+    const schema = z.object({
+      foo: z.number().array(),
+    })
+    const formData = new FormData()
+    formData.append('foo[]', '1')
+    formData.append('foo[]', '2')
+
+    const result = getParams(formData, schema)
+    expect(result.success).toBe(true)
+    const { foo } = result.data!
+    console.log(foo)
+    expect(foo).toStrictEqual([1, 2])
+  })
+  it('should create array if key has [] even for single value', () => {
+    const schema = z.object({
+      foo: z.number().array(),
+    })
+    const formData = new FormData()
+    formData.set('foo[]', '1')
+    formData.set('foo2[]', 'bar')
+
+    const result = getParams(formData, schema)
+    expect(result.success).toBe(true)
+    const { foo } = result.data!
+    console.log(result.data)
+    expect(foo).toStrictEqual([1])
+  })
+})

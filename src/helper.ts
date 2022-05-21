@@ -43,19 +43,14 @@ function parseParams(o: any, schema: any, key: string, value: any) {
     parseParams(o[parentProp], shape[parentProp], rest.join('.'), value)
     return
   }
-
+  let isArray = false
+  if (key.includes('[]')) {
+    isArray = true
+    key = key.replace('[]', '')
+  }
   const def = shape[key]
   if (def) {
     processDef(def, o, key, value as string)
-  } else {
-    if (o.hasOwnProperty(key)) {
-      if (!Array.isArray(o[key])) {
-        o[key] = [o[key]]
-      }
-      o[key].push(value)
-    } else {
-      o[key] = value
-    }
   }
 }
 
@@ -78,8 +73,6 @@ function getParamsInternal<T>(
     if (value === '') {
       continue
     }
-    // remove [] from key since we already handle multi-value params
-    key = key.replace(/\[\]/g, '')
     parseParams(o, schema, key, value)
   }
 
