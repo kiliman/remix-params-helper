@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.4.10
+
+- 🐛 Always create array if key contains `[]` even for single values. Fixes [#24](https://github.com/kiliman/remix-params-helper/issues/24)
+
 ## v0.4.9
 
 - 🐛 Support ZodLiteral type. Fixes [#20](https://github.com/kiliman/remix-params-helper/issues/20)
