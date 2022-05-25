@@ -351,6 +351,29 @@ describe('test useFormInputProps', () => {
       pattern: '^\\d{5}$',
     })
   })
+  it.only('should support deeply nested paths', () => {
+    const schema = z.object({
+      foo: z.object({
+        bar: z.object({
+          baz: z.array(
+            z.object({
+              bears: z.object({
+                apples: z.object({
+                  bananas: z.string(),
+                }),
+              }),
+            }),
+          ),
+        }),
+      }),
+    })
+    const inputProps = useFormInputProps(schema)
+    expect(inputProps('foo.bar.baz[].bears.apples.bananas')).toEqual({
+      type: 'text',
+      name: 'foo.bar.baz[].bears.apples.bananas',
+      required: true,
+    })
+  })
 })
 
 describe('test nested objects and arrays', () => {
