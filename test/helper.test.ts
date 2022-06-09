@@ -497,3 +497,61 @@ describe('test dates', () => {
     expect(result.errors?.['date']).toBe('Expected date, received string')
   })
 })
+describe('literal values', () => {
+  it('should parse literal values', () => {
+    const schema = z.object({
+      key: z.literal('some literal value'),
+    })
+    const formData = new FormData()
+    formData.set('key', 'some literal value')
+
+    const result = getParams(formData, schema)
+    expect(result.success).toBe(true)
+    const { key } = result.data!
+    expect(key).toBe('some literal value')
+  })
+  it('should fail on invalid literal values', () => {
+    const schema = z.object({
+      key: z.literal('some literal value'),
+    })
+    const formData = new FormData()
+    formData.set('key', 'wrong literal value')
+
+    const result = getParams(formData, schema)
+    expect(result.success).toBe(false)
+    expect(result.errors!['key']).toBe(
+      'Expected some literal value, received wrong literal value',
+    )
+  })
+})
+
+describe('array values', () => {
+  it('should create array if key has []', () => {
+    const schema = z.object({
+      foo: z.number().array(),
+    })
+    const formData = new FormData()
+    formData.append('foo[]', '1')
+    formData.append('foo[]', '2')
+
+    const result = getParams(formData, schema)
+    expect(result.success).toBe(true)
+    const { foo } = result.data!
+    console.log(foo)
+    expect(foo).toStrictEqual([1, 2])
+  })
+  it('should create array if key has [] even for single value', () => {
+    const schema = z.object({
+      foo: z.number().array(),
+    })
+    const formData = new FormData()
+    formData.set('foo[]', '1')
+    formData.set('foo2[]', 'bar')
+
+    const result = getParams(formData, schema)
+    expect(result.success).toBe(true)
+    const { foo } = result.data!
+    console.log(result.data)
+    expect(foo).toStrictEqual([1])
+  })
+})

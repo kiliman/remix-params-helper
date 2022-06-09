@@ -64,6 +64,16 @@
         "test",
         "bug"
       ]
+    },
+    {
+      "login": "dusty",
+      "name": "Dusty Doris",
+      "avatar_url": "https://avatars.githubusercontent.com/u/792?v=4",
+      "profile": "https://www.linkedin.com/in/dusty",
+      "contributions": [
+        "code",
+        "bug"
+      ]
     }
   ],
   "contributorsPerLine": 7,
