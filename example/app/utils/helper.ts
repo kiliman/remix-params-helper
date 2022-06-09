@@ -54,6 +54,28 @@ function parseParams(o: any, schema: any, key: string, value: any) {
   }
 }
 
+export function getParamsData<T>(
+  params: URLSearchParams | FormData | Record<string, string | undefined>,
+  schema: any,
+) {
+  // @ts-ignore
+  let o: any = {}
+  let entries: [string, unknown][] = []
+  if (isIterable(params)) {
+    entries = Array.from(params)
+  } else {
+    entries = Object.entries(params)
+  }
+  for (let [key, value] of entries) {
+    // infer an empty param as if it wasn't defined in the first place
+    if (value === '') {
+      continue
+    }
+    parseParams(o, schema, key, value)
+  }
+  return o
+}
+
 function getParamsInternal<T>(
   params: URLSearchParams | FormData | Record<string, string | undefined>,
   schema: any,
