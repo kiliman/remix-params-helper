@@ -234,7 +234,7 @@ function processDef(def: ZodTypeAny, o: any, key: string, value: string) {
   }
 }
 
-function getInputProps(name: string, def: ZodTypeAny): InputPropType {
+function getInputProps(name: string, def: ZodTypeAny, optional: boolean = false): InputPropType {
   let type = 'text'
   let min, max, minlength, maxlength, pattern
   if (def instanceof ZodString) {
@@ -256,16 +256,16 @@ function getInputProps(name: string, def: ZodTypeAny): InputPropType {
   } else if (def instanceof ZodDate) {
     type = 'date'
   } else if (def instanceof ZodArray) {
-    return getInputProps(name, def.element)
+    return getInputProps(name, def.element, optional)
   } else if (def instanceof ZodOptional) {
-    return getInputProps(name, def.unwrap())
+    return getInputProps(name, def.unwrap(), true)
   }
 
   let inputProps: InputPropType = {
     name,
     type,
   }
-  if (!def.isOptional()) inputProps.required = true
+  if (!(def.isOptional() || optional)) inputProps.required = true
   if (min) inputProps.min = min
   if (max) inputProps.max = max
   if (minlength && Number.isFinite(minlength)) inputProps.minLength = minlength

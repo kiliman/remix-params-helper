@@ -284,7 +284,7 @@ describe('test useFormInputProps', () => {
       name: 'c',
       required: true,
     })
-    expect(inputProps('d')).toEqual({ type: 'text', name: 'd', required: true })
+    expect(inputProps('d')).toEqual({ type: 'text', name: 'd' })
     expect(inputProps('e')).toEqual({
       type: 'number',
       name: 'e',
