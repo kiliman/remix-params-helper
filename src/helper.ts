@@ -6,11 +6,13 @@ import {
   ZodDefault,
   ZodEffects,
   ZodEnum,
+  ZodIntersection,
   ZodLiteral,
   ZodNativeEnum,
   ZodNumber,
   ZodObject,
   ZodOptional,
+  ZodPipeline,
   ZodString,
   ZodType,
   ZodTypeAny,
@@ -43,9 +45,7 @@ function parseParams(o: any, schema: any, key: string, value: any) {
     parseParams(o[parentProp], shape[parentProp], rest.join('.'), value)
     return
   }
-  let isArray = false
   if (key.includes('[]')) {
-    isArray = true
     key = key.replace('[]', '')
   }
   const def = shape[key]
@@ -92,14 +92,9 @@ function getParamsInternal<T>(
       }
     }
     for (let issue of result.error.issues) {
-      const { message, path, code, expected, received } = issue
-      const [key, index] = path
-      let value = o[key]
-      let prop = key
-      if (index !== undefined) {
-        value = value[index]
-        prop = `${key}[${index}]`
-      }
+      const { message, path } = issue
+      const [key] = path
+
       addError(key, message)
     }
     return { success: false, data: undefined, errors }
@@ -181,11 +176,36 @@ export type InputPropType = {
   pattern?: string
 }
 
-export function useFormInputProps(schema: any, options: any = {}) {
-  const shape = schema.shape
-  const defaultOptions = options
-  return function props(key: string, options: any = {}) {
-    options = { ...defaultOptions, ...options }
+function getShapeFromZodType(
+  schema: ZodType,
+  shape: any = {}
+): Record<string, ZodType> {
+  if (schema instanceof ZodObject) {
+    for (const key of Object.keys(schema.shape)) {
+      shape[key] = schema.shape[key]
+    }
+
+    return schema.shape
+  }
+
+  if (schema instanceof ZodEffects) {
+    return getShapeFromZodType(schema._def.schema, shape)
+  }
+
+  if (schema instanceof ZodIntersection) {
+    return {
+      ...getShapeFromZodType(schema._def.left, shape),
+      ...getShapeFromZodType(schema._def.right, shape),
+    }
+  }
+
+  return {}
+}
+
+export function useFormInputProps(schema: ZodType) {
+  const shape = getShapeFromZodType(schema)
+
+  return function props(key: string) {
     const def = shape[key]
     if (!def) {
       throw new Error(`no such key: ${key}`)
@@ -234,7 +254,7 @@ function processDef(def: ZodTypeAny, o: any, key: string, value: string) {
   }
 }
 
-function getInputProps(name: string, def: ZodTypeAny): InputPropType {
+function getInputProps(name: string, def: ZodTypeAny, optional: boolean = false): InputPropType {
   let type = 'text'
   let min, max, minlength, maxlength, pattern
   if (def instanceof ZodString) {
@@ -256,16 +276,20 @@ function getInputProps(name: string, def: ZodTypeAny): InputPropType {
   } else if (def instanceof ZodDate) {
     type = 'date'
   } else if (def instanceof ZodArray) {
-    return getInputProps(name, def.element)
+    return getInputProps(name, def.element, optional)
   } else if (def instanceof ZodOptional) {
-    return getInputProps(name, def.unwrap())
+    return getInputProps(name, def.unwrap(), true)
+  } else if (def instanceof ZodEffects) {
+    return getInputProps(name, def._def.schema, optional)
+  } else if (def instanceof ZodPipeline) {
+    return getInputProps(name, def._def.out, optional)
   }
 
   let inputProps: InputPropType = {
     name,
     type,
   }
-  if (!def.isOptional()) inputProps.required = true
+  if (!(def.isOptional() || optional)) inputProps.required = true
   if (min) inputProps.min = min
   if (max) inputProps.max = max
   if (minlength && Number.isFinite(minlength)) inputProps.minLength = minlength

@@ -6,7 +6,6 @@ import { getParams } from '~/utils/helper'
 const ParamsSchema = z.object({
   id: z.number(),
 })
-type ParamsType = z.infer<typeof ParamsSchema>
 
 // The `$` in route filenames becomes a pattern that's parsed from the URL and
 // passed to your loaders so you can look up data.
@@ -14,7 +13,7 @@ type ParamsType = z.infer<typeof ParamsSchema>
 
 export let loader: LoaderFunction = async ({ params }) => {
   // verify params are valid (in this case id is a number)
-  const result = getParams<ParamsType>(Object.entries(params), ParamsSchema)
+  const result = getParams(params, ParamsSchema)
   if (!result.success) {
     // Sometimes your code just blows up and you never anticipated it. Remix will
     // automatically catch it and send the UI to the error boundary.

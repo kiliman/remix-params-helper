@@ -284,7 +284,7 @@ describe('test useFormInputProps', () => {
       name: 'c',
       required: true,
     })
-    expect(inputProps('d')).toEqual({ type: 'text', name: 'd', required: true })
+    expect(inputProps('d')).toEqual({ type: 'text', name: 'd' })
     expect(inputProps('e')).toEqual({
       type: 'number',
       name: 'e',
@@ -300,6 +300,7 @@ describe('test useFormInputProps', () => {
       email: z.string().email(),
       url: z.string().url(),
       date: z.date(),
+      coercedDate: z.string().pipe(z.coerce.date()).optional()
     })
     const inputProps = useFormInputProps(schema)
     expect(inputProps('email')).toEqual({
@@ -316,6 +317,10 @@ describe('test useFormInputProps', () => {
       type: 'date',
       name: 'date',
       required: true,
+    })
+    expect(inputProps('coercedDate')).toEqual({
+      type: 'date',
+      name: 'coercedDate',
     })
   })
   it('should support min/max props', () => {
@@ -349,6 +354,24 @@ describe('test useFormInputProps', () => {
       name: 'zip',
       required: true,
       pattern: '^\\d{5}$',
+    })
+  })
+  it('should support intersection types', () => {
+    const schema = z.intersection(
+      z.object({ a: z.string() }),
+      z.object({ b: z.number() })
+    )
+    const inputProps = useFormInputProps(schema)
+
+    expect(inputProps('a')).toEqual({
+      type: 'text',
+      name: 'a',
+      required: true
+    })
+    expect(inputProps('b')).toEqual({
+      type: 'number',
+      name: 'b',
+      required: true
     })
   })
 })
@@ -429,7 +452,7 @@ describe('test refine schema', () => {
     let resultBad = getParams(formData, schema)
     expect(resultBad.success).toBe(false)
     expect(resultBad.errors?.['num']).toBe(
-      'Value should be less than or equal to 10',
+      'Number must be less than or equal to 10',
     )
 
     formData.set('num', 'abc')
@@ -520,7 +543,7 @@ describe('literal values', () => {
     const result = getParams(formData, schema)
     expect(result.success).toBe(false)
     expect(result.errors!['key']).toBe(
-      'Expected some literal value, received wrong literal value',
+      'Invalid literal value, expected "some literal value"',
     )
   })
 })
@@ -537,7 +560,7 @@ describe('array values', () => {
     const result = getParams(formData, schema)
     expect(result.success).toBe(true)
     const { foo } = result.data!
-    console.log(foo)
+
     expect(foo).toStrictEqual([1, 2])
   })
   it('should create array if key has [] even for single value', () => {
@@ -551,7 +574,7 @@ describe('array values', () => {
     const result = getParams(formData, schema)
     expect(result.success).toBe(true)
     const { foo } = result.data!
-    console.log(result.data)
+
     expect(foo).toStrictEqual([1])
   })
 })

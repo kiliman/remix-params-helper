@@ -19,7 +19,7 @@ type ParamsType = z.infer<typeof ParamsSchema>
 export let loader: LoaderFunction = async ({ request }) => {
   // verify params are valid (in this case id is a number)
   const url = new URL(request.url)
-  const result = getParams<ParamsType>(url.searchParams, ParamsSchema)
+  const result = getParams(url.searchParams, ParamsSchema)
   if (!result.success) {
     // Sometimes your code just blows up and you never anticipated it. Remix will
     // automatically catch it and send the UI to the error boundary.
