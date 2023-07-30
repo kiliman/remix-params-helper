@@ -14,6 +14,7 @@ import {
   ZodString,
   ZodType,
   ZodTypeAny,
+  ZodUnion,
 } from 'zod'
 
 function isIterable(
@@ -223,6 +224,20 @@ function processDef(def: ZodTypeAny, o: any, key: string, value: string) {
     return
   } else if (def instanceof ZodEffects) {
     processDef(def._def.schema, o, key, value)
+    return
+  } else if (def instanceof ZodUnion) {
+    for (const optionDef of def._def.options) {
+      try {
+        // Try parsing the value with each option of the union until one succeeds
+        processDef(optionDef, o, key, value)
+        // If parsing succeeds, break the loop
+        break
+      } catch (error) {
+        // If parsing fails with an option, try the next one
+        continue
+      }
+    }
+    // Return here to prevent overwriting the result of the successful option
     return
   } else {
     throw new Error(`Unexpected type ${def._def.typeName} for key ${key}`)
