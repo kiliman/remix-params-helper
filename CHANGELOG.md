@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.5.0
+
+- 🐛 Update package for ESM and CJS builds using esbuild vs tsc. Fixes [#39](https://github.com/kiliman/remix-params-helper/issues/39)
+
 ## v0.4.10
 
 - 🐛 Always create array if key contains `[]` even for single values. Fixes [#24](https://github.com/kiliman/remix-params-helper/issues/24)
