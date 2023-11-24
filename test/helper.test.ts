@@ -2,6 +2,7 @@ import { z } from 'zod'
 import {
   getFormData,
   getParams,
+  getParamsData,
   getParamsOrFail,
   getSearchParams,
   useFormInputProps,
@@ -553,5 +554,16 @@ describe('array values', () => {
     const { foo } = result.data!
     console.log(result.data)
     expect(foo).toStrictEqual([1])
+  })
+})
+
+describe('test getParams', () => {
+  it('should return data from params', () => {
+    const params = { a: 'a value', b: '3' }
+    const schema = z.object({ a: z.string(), b: z.number() })
+
+    const data = getParamsData(params, schema)
+    console.log(data)
+    expect(data).toEqual({ a: 'a value', b: 3 })
   })
 })

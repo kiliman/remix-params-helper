@@ -54,12 +54,10 @@ function parseParams(o: any, schema: any, key: string, value: any) {
   }
 }
 
-function getParamsInternal<T>(
+export function getParamsData<T>(
   params: URLSearchParams | FormData | Record<string, string | undefined>,
   schema: any,
-):
-  | { success: true; data: T; errors: undefined }
-  | { success: false; data: undefined; errors: { [key: string]: string } } {
+) {
   // @ts-ignore
   let o: any = {}
   let entries: [string, unknown][] = []
@@ -75,7 +73,16 @@ function getParamsInternal<T>(
     }
     parseParams(o, schema, key, value)
   }
+  return o
+}
 
+function getParamsInternal<T>(
+  params: URLSearchParams | FormData | Record<string, string | undefined>,
+  schema: any,
+):
+  | { success: true; data: T; errors: undefined }
+  | { success: false; data: undefined; errors: { [key: string]: string } } {
+  const o = getParamsData(params, schema)
   const result = schema.safeParse(o)
   if (result.success) {
     return { success: true, data: result.data as T, errors: undefined }
