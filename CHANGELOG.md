@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.5.1
+
+- 🐛 Generate helper.d.ts file. Fixes [#40](https://github.com/kiliman/remix-params-helper/issues/40)
+
 ## v0.5.0
 
 - 🐛 Update package for ESM and CJS builds using esbuild vs tsc. Fixes [#39](https://github.com/kiliman/remix-params-helper/issues/39)
